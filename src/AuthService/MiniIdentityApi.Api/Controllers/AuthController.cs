@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿ using Microsoft.AspNetCore.Mvc;
 using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Services;
 
