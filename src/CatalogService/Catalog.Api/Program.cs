@@ -1,8 +1,10 @@
+using Catalog.Application.Interfaces;
+using Catalog.Application.Services;
 using Catalog.Infrastructure.Persistence;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-//using Catalog.Domain.Interfaces;
-
+using Catalog.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +14,13 @@ builder.Services.AddOpenApi();
 
 // DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("Catalog.Infrastructure")));
+
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+
+builder.Services.AddScoped<UploadBooksService>();
+
 
 
 var app = builder.Build();
