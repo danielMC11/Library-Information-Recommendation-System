@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "src\\AuthService\\MiniIdentityApi.Api\\MiniIdentityApi.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\CatalogService\\Catalog.Api\\Catalog.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
