@@ -100,7 +100,7 @@ if (adminUser is null)
     var hash = passwordHasher.Hash("Admin123*", salt);
 
     var credential = new Credential(hash, salt);
-    adminUser = new User("admin", "admin@example.com", credential);
+    adminUser = new User("admin", "admin@example.com", 1, 1, credential);
     adminUser.AddRole(adminRole);
 
     userRepository.Save(adminUser);
