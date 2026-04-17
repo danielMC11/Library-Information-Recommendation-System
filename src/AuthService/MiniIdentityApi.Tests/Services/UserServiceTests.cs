@@ -18,7 +18,7 @@ public class UserServiceTests
         var service = new UserService(userRepository, roleRepository);
 
         var credential = new Credential("hash", "salt");
-        var user = new User("wolfang", "wolfang@example.com", credential);
+        var user = new User("wolfang", "wolfang@example.com", 1, 1, credential);
         var role = new Role("Admin");
 
         userRepository.Save(user);
@@ -44,7 +44,7 @@ public class UserServiceTests
         var service = new UserService(userRepository, roleRepository);
 
         var credential = new Credential("hash", "salt");
-        var user = new User("wolfang", "wolfang@example.com", credential);
+        var user = new User("wolfang", "wolfang@example.com", 1, 1, credential);
 
         userRepository.Save(user);
 
@@ -67,7 +67,7 @@ public class UserServiceTests
         var service = new UserService(userRepository, roleRepository);
 
         var credential = new Credential("hash", "salt");
-        var user = new User("wolfang", "wolfang@example.com", credential);
+        var user = new User("wolfang", "wolfang@example.com", 1, 1, credential);
 
         user.Deactivate();
         userRepository.Save(user);
@@ -79,5 +79,29 @@ public class UserServiceTests
         var updatedUser = userRepository.FindById(user.Id);
         Assert.NotNull(updatedUser);
         Assert.Equal(UserStatus.Active, updatedUser!.Status);
+    }
+
+    [Fact]
+    public void UpdateCareerAndSemester_ShouldUpdateUserCareerAndSemester()
+    {
+        // Arrange
+        var userRepository = new InMemoryUserRepository();
+        var roleRepository = new InMemoryRoleRepository();
+
+        var service = new UserService(userRepository, roleRepository);
+
+        var credential = new Credential("hash", "salt");
+        var user = new User("wolfang", "wolfang@example.com", 1, 1, credential);
+
+        userRepository.Save(user);
+
+        // Act
+        service.UpdateCareerAndSemester(user.Id, 2, 4);
+
+        // Assert
+        var updatedUser = userRepository.FindById(user.Id);
+        Assert.NotNull(updatedUser);
+        Assert.Equal(2, updatedUser!.Career);
+        Assert.Equal(4, updatedUser.Semester);
     }
 }

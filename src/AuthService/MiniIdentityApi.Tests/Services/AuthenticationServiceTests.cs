@@ -23,7 +23,9 @@ public class AuthenticationServiceTests
         {
             Username = "wolfang",
             Email = "wolfang@example.com",
-            Password = "Pass123!"
+            Password = "Pass123!",
+            Career = 1,
+            Semester = 3
         };
 
         // Act
@@ -34,6 +36,8 @@ public class AuthenticationServiceTests
         Assert.NotNull(savedUser);
         Assert.Equal("wolfang", savedUser!.Username);
         Assert.Equal("wolfang@example.com", savedUser.Email);
+        Assert.Equal(1, savedUser.Career);
+        Assert.Equal(3, savedUser.Semester);
     }
 
     [Fact]
@@ -50,7 +54,9 @@ public class AuthenticationServiceTests
         {
             Username = "wolfang",
             Email = "wolfang@example.com",
-            Password = "Pass123!"
+            Password = "Pass123!",
+            Career = 1,
+            Semester = 3
         };
 
         service.Register(request);
@@ -73,7 +79,9 @@ public class AuthenticationServiceTests
         {
             Username = "wolfang",
             Email = "wolfang@example.com",
-            Password = "Pass123!"
+            Password = "Pass123!",
+            Career = 1,
+            Semester = 3
         });
 
         var loginRequest = new LoginRequest
@@ -87,6 +95,7 @@ public class AuthenticationServiceTests
 
         // Assert
         Assert.NotNull(response);
+        Assert.NotEqual(Guid.Empty, response.Id);
         Assert.Equal("wolfang", response.Username);
         Assert.Equal("wolfang@example.com", response.Email);
         Assert.False(string.IsNullOrWhiteSpace(response.AccessToken));
@@ -106,7 +115,9 @@ public class AuthenticationServiceTests
         {
             Username = "wolfang",
             Email = "wolfang@example.com",
-            Password = "Pass123!"
+            Password = "Pass123!",
+            Career = 1,
+            Semester = 3
         });
 
         var loginRequest = new LoginRequest
