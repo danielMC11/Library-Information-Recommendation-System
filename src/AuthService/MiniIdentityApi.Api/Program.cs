@@ -10,6 +10,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//CORSHOTFIX
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost5173", policy =>
@@ -123,6 +124,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//CORSHOTFIX
 app.UseCors("AllowLocalhost5173");
 app.UseHttpsRedirection();
 app.UseAuthentication();

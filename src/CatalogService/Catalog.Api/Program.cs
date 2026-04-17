@@ -12,6 +12,18 @@ System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Inst
 
 var builder = WebApplication.CreateBuilder(args);
 
+//CORSHOTFIX
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost5173", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // -------------------- CONTROLLERS --------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -90,6 +102,13 @@ builder.Services.AddAuthorization();
 // -------------------- APP --------------------
 var app = builder.Build();
 
+// -------------------- DATABASE MIGRATION --------------------
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 // -------------------- PIPELINE --------------------
 if (app.Environment.IsDevelopment())
 {
@@ -97,6 +116,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//CORSHOTFIX
+app.UseCors("AllowLocalhost5173");
 app.UseHttpsRedirection();
 
 app.UseAuthentication(); // 🔥 IMPORTANTE
