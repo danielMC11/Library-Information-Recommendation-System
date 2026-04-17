@@ -120,7 +120,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowLocalhost5173");
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // 🔥 IMPORTANTE
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
