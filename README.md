@@ -1,329 +1,412 @@
-# MiniIdentity API (.NET 10)
+# Library Information Recommendation System
 
-A simple ASP.NET Core Web API example for:
-- user registration
-- login with JWT
-- role management
-- permission assignment
-- protected endpoints with `[Authorize]`
+A comprehensive microservices-based system built with .NET 10 for managing library information and providing book recommendations.
 
-This project is designed as an academic example to explain authentication, authorization, layered architecture, DTOs, in-memory repositories, and token-based access control.
+## Architecture Overview
 
----
+This project is organized into two main microservices:
 
-## Design UML
+- **AuthService**: Handles authentication, user registration, login, and JWT token generation
+- **CatalogService**: Manages the library catalog and book recommendations
 
-The following UML diagram shows the main structure of the solution, including controllers, services, DTOs, domain entities, repositories, and security components.
-
-![MiniIdentity API UML Design](docs/uml/mini-identity-api-uml.png)
+### Technology Stack
+- **Backend**: ASP.NET Core 10
+- **Databases**: PostgreSQL (Catalog), Redis (Auth Cache)
+- **Container Orchestration**: Docker & Docker Compose
+- **Testing**: Unit and Integration Tests
 
 ---
 
-## Architecture
+## Prerequisites
 
-The solution is organized into four main projects:
+Before running the project, ensure you have installed:
 
-- **MiniIdentityApi.Api**: exposes HTTP endpoints through controllers and configures Swagger, authentication, and dependency injection.
-- **MiniIdentityApi.Application**: contains DTOs, interfaces, and application services.
-- **MiniIdentityApi.Domain**: contains the core domain entities and enums.
-- **MiniIdentityApi.Infrastructure**: contains in-memory repositories, password hashing, and JWT token generation.
-- **MiniIdentityApi.Tests**: contains unit and integration tests for the application.
+- [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download)
+- [Docker & Docker Compose](https://www.docker.com/products/docker-desktop)
+- [Git](https://git-scm.com)
+- A code editor (Visual Studio, Visual Studio Code, or Rider)
 
----
-
-## What each controller does
-
-### AuthController
-Handles authentication-related operations.
-
-Endpoints:
-- `POST /api/auth/register`: registers a new user with username, email, and password.
-- `POST /api/auth/login`: validates credentials and returns a JWT access token.
-
-### UsersController
-Handles user administration.
-
-Endpoints:
-- `GET /api/users`: returns all users. Requires `Admin` role.
-- `GET /api/users/{id}`: returns a user by id. Requires authentication.
-- `PATCH /api/users/{id}/activate`: activates a user. Requires `Admin` role.
-- `PATCH /api/users/{id}/deactivate`: deactivates a user. Requires `Admin` role.
-- `POST /api/users/{id}/roles`: assigns a role to a user. Requires `Admin` role.
-
-### RolesController
-Handles role and permission management.
-
-Endpoints:
-- `GET /api/roles`: returns all roles. Requires `Admin` role.
-- `POST /api/roles`: creates a new role. Requires `Admin` role.
-- `POST /api/roles/{roleName}/permissions`: adds a permission to a role. Requires `Admin` role.
-
-### DemoController
-Contains protected demo endpoints to validate JWT authentication and role-based access control.
-
-Endpoints:
-- `GET /api/demo/profile`: any authenticated user can access.
-- `GET /api/demo/admin`: only users with `Admin` role can access.
+### Optional Tools
+- [Postman](https://www.postman.com) - for API testing
+- [DBeaver](https://dbeaver.io) - for database management
 
 ---
 
-## What each service does
+## Project Structure
 
-### AuthenticationService
-Responsible for registration and login.
-
-Main responsibilities:
-- validates input for registration
-- verifies whether a user already exists
-- hashes the password using a salt
-- creates the `Credential` and `User` objects
-- validates credentials on login
-- checks that the user status is `Active`
-- requests a JWT from `ITokenService`
-
-### AuthorizationService
-Responsible for checking whether a user has a specific permission.
-
-Main responsibilities:
-- loads the user by id
-- checks whether the user is active
-- delegates permission lookup to the domain model
-
-### UserService
-Responsible for user management use cases.
-
-Main responsibilities:
-- lists users
-- gets a user by id
-- activates and deactivates users
-- assigns roles to users
-
-### RoleService
-Responsible for role and permission management.
-
-Main responsibilities:
-- lists roles
-- creates roles
-- adds permissions to roles
+```
+Library-Information-Recommendation-System/
+├── src/
+│   ├── AuthService/
+│   │   ├── MiniIdentityApi.Api/          # API endpoints
+│   │   ├── MiniIdentityApi.Application/  # DTOs & Services
+│   │   ├── MiniIdentityApi.Domain/       # Domain entities
+│   │   ├── MiniIdentityApi.Infrastructure/  # Repositories & Security
+│   │   └── MiniIdentityApi.Tests/        # Unit & Integration tests
+│   │
+│   └── CatalogService/
+│       ├── Catalog.Api/                   # API endpoints
+│       ├── Catalog.Application/           # DTOs & Services
+│       ├── Catalog.Domain/                # Domain entities
+│       └── Catalog.Infrastructure/        # Repositories & Database
+│
+├── docs/                                  # Documentation & UML diagrams
+├── postman/                               # Postman collections
+├── docker-compose.yml                     # Services configuration
+└── README.md
+```
 
 ---
 
-## Domain model
+## Running the Project
 
-### User
-Represents the user account.
+### Option 1: Quick Start with Docker Compose (Recommended)
 
-Main fields:
-- `Id`
-- `Username`
-- `Email`
-- `Status`
-- `Credential`
-- `Roles`
+This is the fastest way to get the entire system running with all dependencies.
 
-Key behavior:
-- activate user
-- deactivate user
-- block user
-- assign a role
-- check if the user has a permission through assigned roles
-
-### Credential
-Represents the password-related information.
-
-Main fields:
-- `PasswordHash`
-- `Salt`
-- `LastChangedAt`
-
-### Role
-Represents a role such as `Admin`, `Teacher`, or `Student`.
-
-Main fields:
-- `Id`
-- `Name`
-- `Permissions`
-
-### Permission
-Represents a permission code such as:
-- `users.read`
-- `users.create`
-- `roles.assign`
-
-### UserStatus
-Represents the current status of a user:
-- `Active`
-- `Inactive`
-- `Blocked`
-
----
-
-## Infrastructure components
-
-### InMemoryUserRepository
-Stores users in memory using a `List<User>`.
-
-### InMemoryRoleRepository
-Stores roles in memory using a `List<Role>`.
-
-### Sha256PasswordHasher
-Generates salts, hashes passwords with SHA-256, and verifies passwords.
-
-### JwtTokenService
-Builds JWT access tokens using configuration values from `appsettings.json`.
-
----
-
-## Required NuGet packages
-
-Install these packages in **MiniIdentityApi.Api**:
+#### Step 1: Start the Database Services
 
 ```bash
-dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
-dotnet add package Swashbuckle.AspNetCore --version 10.*
+docker-compose up -d
+```
+
+This command will start:
+- **Redis** (port 6379) - for AuthService caching
+- **PostgreSQL** (port 5435) - for CatalogService database
+
+Verify the services are running:
+```bash
+docker-compose ps
+```
+
+#### Step 2: Build the .NET Services
+
+From the project root, build all services:
+
+```bash
+dotnet build
+```
+
+#### Step 3: Run the AuthService
+
+Open a new terminal and navigate to the AuthService project:
+
+```bash
+cd src/AuthService/MiniIdentityApi.Api
+dotnet run
+```
+
+The AuthService will be available at `https://localhost:5001` (or the port shown in console)
+
+#### Step 4: Run the CatalogService
+
+Open another terminal and navigate to the CatalogService project:
+
+```bash
+cd src/CatalogService/Catalog.Api
+dotnet run
+```
+
+The CatalogService will be available at `https://localhost:5002` (or the port shown in console)
+
+#### Step 5: Access the APIs
+
+Both services include Swagger UI for easy testing:
+
+- **AuthService Swagger**: https://localhost:5001/swagger
+- **CatalogService Swagger**: https://localhost:5002/swagger
+
+---
+
+### Option 2: Running Services Locally (Manual Setup)
+
+If you prefer to run services without Docker, you'll need to manually configure the databases.
+
+#### AuthService Setup
+
+1. Navigate to the AuthService directory:
+```bash
+cd src/AuthService/MiniIdentityApi.Api
+```
+
+2. Install dependencies:
+```bash
+dotnet restore
+```
+
+3. Configure Redis (if using cache features):
+   - Install Redis locally or skip if not using Auth cache
+   - Update connection strings in `appsettings.Development.json` if needed
+
+4. Run the service:
+```bash
+dotnet run --configuration Development
+```
+
+#### CatalogService Setup
+
+1. Navigate to the CatalogService directory:
+```bash
+cd src/CatalogService/Catalog.Api
+```
+
+2. Install dependencies:
+```bash
+dotnet restore
+```
+
+3. Configure PostgreSQL:
+   - Ensure PostgreSQL is running locally
+   - Update the connection string in `appsettings.Development.json`:
+   ```json
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Host=localhost;Port=5432;Database=catalog_db;Username=postgres;Password=your_password"
+     }
+   }
+   ```
+
+4. Apply database migrations (if applicable):
+```bash
+dotnet ef database update
+```
+
+5. Run the service:
+```bash
+dotnet run --configuration Development
 ```
 
 ---
 
-## Configuration
+## Database Configuration
 
-Add this to `MiniIdentityApi.Api/appsettings.json`:
+### PostgreSQL (CatalogService)
 
-```json
+**Docker Configuration** (from docker-compose.yml):
+- Host: `localhost`
+- Port: `5435`
+- Database: `catalog_db`
+- Username: `postgres`
+- Password: `secret-postgres`
+
+**Connection String**:
+```
+Host=localhost;Port=5435;Database=catalog_db;Username=postgres;Password=secret-postgres
+```
+
+### Redis (AuthService)
+
+**Docker Configuration** (from docker-compose.yml):
+- Host: `localhost`
+- Port: `6379`
+- Password: `secret-redis`
+
+**Connection String**:
+```
+localhost:6379,password=secret-redis
+```
+
+---
+
+## Testing the APIs
+
+### Using Postman
+
+1. Import the provided Postman collections:
+   - `postman/MiniIdentityApi.postman_collection.json` - AuthService endpoints
+   - `postman/MiniIdentityApi.postman_environment.json` - Environment variables
+
+2. Update environment variables if needed:
+   - `baseUrl`: Your local API URL
+   - `jwt`: Token from login (auto-filled after login request)
+   - `port`: API port number
+
+### Using Swagger UI
+
+1. Open your browser and navigate to the Swagger URL of each service
+2. Click "Try it out" on any endpoint
+3. Fill in the required parameters
+4. Click "Execute"
+
+### Example Workflow
+
+#### 1. Register a User (AuthService)
+```
+POST /api/auth/register
 {
-  "Jwt": {
-    "Key": "THIS_IS_A_DEMO_KEY_CHANGE_IT_123456789",
-    "Issuer": "MiniIdentityApi",
-    "Audience": "MiniIdentityApiUsers"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*"
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "SecurePass123!"
 }
 ```
 
----
-
-## Important bootstrap note
-
-All role-management and admin-management endpoints require the `Admin` role.
-Because of that, the project should include an initial seed or bootstrap strategy for the first administrator.
-
-Recommended options:
-1. seed an admin role and admin user when the application starts
-2. create a temporary bootstrap endpoint for the first demo
-3. temporarily relax admin restrictions only for testing
-
-The cleanest option is **seeding** an initial admin role and admin user.
-
----
-
-## Suggested execution flow
-
-### Basic flow without admin bootstrap
-1. Register a user.
-2. Login.
-3. Use the JWT to call `/api/demo/profile`.
-
-### Full flow with seeded admin
-1. Login as seeded admin.
-2. Create roles.
-3. Add permissions to roles.
-4. Register another user.
-5. Assign a role to that user.
-6. Test protected endpoints.
-
----
-
-## Example requests
-
-### Register user
-`POST /api/auth/register`
-
-```json
+#### 2. Login
+```
+POST /api/auth/login
 {
-  "username": "wolfang",
-  "email": "wolfang@example.com",
-  "password": "Pass123!"
+  "usernameOrEmail": "john_doe",
+  "password": "SecurePass123!"
 }
 ```
 
-### Login user
-`POST /api/auth/login`
+Response will include a JWT token. Copy this token.
 
-```json
-{
-  "usernameOrEmail": "wolfang",
-  "password": "Pass123!"
-}
+#### 3. Access Protected Endpoints
 ```
-
-### Create role
-`POST /api/roles`
-
-```json
-{
-  "name": "Admin"
-}
-```
-
-### Add permission to role
-`POST /api/roles/Admin/permissions`
-
-```json
-{
-  "code": "users.read",
-  "description": "Allows listing users"
-}
-```
-
-### Assign role to user
-`POST /api/users/{id}/roles`
-
-```json
-{
-  "roleName": "Admin"
-}
+GET /api/demo/profile
+Authorization: Bearer <your_jwt_token>
 ```
 
 ---
 
-## Swagger URL
+## Running Tests
 
-If the API runs locally, Swagger will usually be available at:
+### Run All Tests
 
-```text
-https://localhost:{port}/swagger
+```bash
+dotnet test
+```
+
+### Run Tests for Specific Project
+
+```bash
+dotnet test src/AuthService/MiniIdentityApi.Tests/MiniIdentityApi.Tests.csproj
+```
+
+### Run Tests with Coverage
+
+```bash
+dotnet test /p:CollectCoverage=true
 ```
 
 ---
 
-## Postman collection
+## Troubleshooting
 
-The Postman files are included in the repository under:
+### Port Already in Use
+If ports 5001, 5002, or the database ports are already in use:
 
-- `postman/MiniIdentityApi.postman_collection.json`
-- `postman/MiniIdentityApi.postman_environment.json`
+1. **Find the process using the port**:
+   ```bash
+   # On Windows
+   netstat -ano | findstr :5001
+   
+   # On macOS/Linux
+   lsof -i :5001
+   ```
 
-Import both files into Postman.
+2. **Kill the process** or change the port in the service configuration
 
-After importing them, update these variables as needed:
-- `baseUrl`
-- `jwt`
-- `userId`
-- `roleName`
+### Docker Container Issues
+
+**Check container logs**:
+```bash
+docker-compose logs -f
+```
+
+**Restart containers**:
+```bash
+docker-compose restart
+```
+
+**Stop all containers**:
+```bash
+docker-compose down
+```
+
+### Database Connection Failed
+
+1. Verify the connection string matches your configuration
+2. Ensure the database server is running
+3. Check firewall settings aren't blocking connections
+4. Verify database credentials are correct
+
+### .NET Build Issues
+
+1. Clean the build:
+```bash
+dotnet clean
+```
+
+2. Restore packages:
+```bash
+dotnet restore
+```
+
+3. Rebuild:
+```bash
+dotnet build
+```
 
 ---
 
-## Suggested repository structure for docs
+## Documentation
 
-```text
-docs/
-└── uml/
-    └── mini-identity-api-uml.png
+- **Architecture Diagram**: `docs/uml/mini-identity-api-uml.png`
+- **API Documentation**: Available at `/swagger` endpoints
+- **Service Details**: See sections below
+
+---
+
+## AuthService Components
+
+### Endpoints
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login and receive JWT token
+- `GET /api/users` - List all users (Admin only)
+- `POST /api/roles` - Create roles (Admin only)
+
+### Key Features
+- JWT authentication
+- Password hashing with SHA-256
+- Role-based access control
+- User management
+- Permission assignment
+
+For detailed information, see the AuthService documentation in the project.
+
+---
+
+## CatalogService Components
+
+### Endpoints
+- `GET /api/catalog/books` - Get all books
+- `GET /api/catalog/books/{id}` - Get book by ID
+- `POST /api/catalog/books` - Create new book (Admin only)
+- `GET /api/recommendations` - Get personalized recommendations
+
+### Key Features
+- Book catalog management
+- Recommendation engine
+- PostgreSQL persistence
+- RESTful API design
+
+---
+
+## Stopping the Services
+
+### Stop All Docker Containers
+
+```bash
+docker-compose down
 ```
 
+### Remove All Data (Start Fresh)
+
+```bash
+docker-compose down -v
+```
+
+---
+
+## Support & Documentation
+
+For more information on specific services, check the documentation in the `docs/` folder.
+
+For detailed API endpoints and request/response formats, visit the Swagger UI when services are running.
+
+---
+
+## License
+
+This project is provided as-is for educational purposes.
