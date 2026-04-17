@@ -1,6 +1,7 @@
 ﻿using Catalog.Application.DTOs;
 using Catalog.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Catalog.Api.Controllers;
@@ -8,6 +9,7 @@ namespace Catalog.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UploadBooksController : ControllerBase
 {
 
