@@ -17,5 +17,11 @@
     <Folder Name="/Elementos de la solución/">
         <File Path="docker-compose.yml" />
     </Folder>
+    <Folder Name="/InteractionService/">
+        <Project Path="src/InteractionService/Interaction.Api/Interaction.Api.csproj" Id="09fcd0a8-8869-46f2-b9ff-7c1426629dba" />
+        <Project Path="src/InteractionService/Interaction.Application/Interaction.Application.csproj" Id="1a63ce8e-eb5d-45ac-90c1-f294f874a2a3" />
+        <Project Path="src/InteractionService/Interaction.Domain/Interaction.Domain.csproj" Id="ef61cfdd-5712-4743-b6c6-e81f7a7acc6a" />
+        <Project Path="src/InteractionService/Interaction.Infrastructure/Interaction.Infrastructure.csproj" Id="5cba68ef-f442-49d3-98a2-3c4079b8f0c3" />
+    </Folder>
 
 </Solution>
