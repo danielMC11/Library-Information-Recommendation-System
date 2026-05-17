@@ -23,5 +23,11 @@
         <Project Path="src/InteractionService/Interaction.Domain/Interaction.Domain.csproj" Id="ef61cfdd-5712-4743-b6c6-e81f7a7acc6a" />
         <Project Path="src/InteractionService/Interaction.Infrastructure/Interaction.Infrastructure.csproj" Id="5cba68ef-f442-49d3-98a2-3c4079b8f0c3" />
     </Folder>
+    <Folder Name="/RecommendationService/">
+        <Project Path="src/RecommendationService/Recommendation.Api/Recommendation.Api.csproj" Id="149bad15-e1b9-486a-b9cd-d290aa922183" />
+        <Project Path="src/RecommendationService/Recommendation.Application/Recommendation.Application.csproj" Id="da38b869-ddc6-4d08-8ee8-d1343c4ae2b8" />
+        <Project Path="src/RecommendationService/Recommendation.Domain/Recommendation.Domain.csproj" Id="f62034df-beaa-4ec2-8847-3b7b7099a0db" />
+        <Project Path="src/RecommendationService/Recommendation.Infrastructure/Recommendation.Infrastructure.csproj" Id="ccc22acd-21d6-4fbe-83c6-169877a42fe9" />
+    </Folder>
 
 </Solution>
