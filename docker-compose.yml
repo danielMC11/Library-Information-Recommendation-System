@@ -25,5 +25,23 @@ services:
       timeout: 5s
       retries: 5
 
+  interactionservice_db:
+    image: postgres:16
+    container_name: interaction_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret-postgres
+      POSTGRES_DB: interaction_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - pgdata_interaction:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d interaction_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata_catalog:
+  pgdata_interaction:

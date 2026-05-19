@@ -10,6 +10,7 @@ using System.Text;
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 //CORSHOTFIX
@@ -56,7 +57,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-// -------------------- DATABASE --------------------
+// -------------------- DATABASE   
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),

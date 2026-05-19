@@ -9,6 +9,10 @@
       {
         "Path": "src\\CatalogService\\Catalog.Api\\Catalog.Api.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "src\\InteractionService\\Interaction.Api\\Interaction.Api.csproj",
+        "Action": "Start"
       }
     ]
   }

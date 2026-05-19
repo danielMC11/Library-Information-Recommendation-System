@@ -8,6 +8,7 @@ using MiniIdentityApi.Infrastructure.Repositories;
 using MiniIdentityApi.Infrastructure.Security;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 //CORSHOTFIX
