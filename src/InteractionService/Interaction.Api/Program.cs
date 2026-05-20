@@ -65,8 +65,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 // -------------------- DEPENDENCIES --------------------
-
-
+builder.Services.AddScoped<Interaction.Application.Interfaces.IUserFavoriteRepository, Interaction.Infrastructure.Repositories.UserFavoriteRepository>();
+builder.Services.AddScoped<Interaction.Application.Services.SaveUserFavorite>();
+builder.Services.AddScoped<Interaction.Application.Services.GetUserFavoriteBook>();
+builder.Services.AddScoped<Interaction.Application.Services.CheckFavoriteBooksAsync>();
 
 
 // -------------------- JWT CONFIG --------------------

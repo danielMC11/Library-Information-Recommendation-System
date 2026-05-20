@@ -16,8 +16,4 @@
     <ProjectReference Include="..\Interaction.Application\Interaction.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
 </Project>
