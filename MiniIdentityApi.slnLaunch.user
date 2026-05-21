@@ -11,7 +11,7 @@
         "Action": "Start"
       },
       {
-        "Path": "src\\InteractionService\\Interaction.Api\\Interaction.Api.csproj",
+        "Path": "src\\RecommendationService\\Recommendation.Api\\Recommendation.Api.csproj",
         "Action": "Start"
       }
     ]

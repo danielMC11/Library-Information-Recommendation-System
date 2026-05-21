@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Catalog.Api.Config;
+using Catalog.Api.Messaging;
 using System.Text;
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -65,10 +67,21 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
+
+
 // -------------------- DEPENDENCIES --------------------
+
+
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName)
+);
+
+
+
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<UploadBooksService>();
 builder.Services.AddScoped<BookService>();
+builder.Services.AddSingleton<CatalogUploadPublisher>();
 
 
 // -------------------- JWT CONFIG --------------------

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,11 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\**" />
+    <Content Remove="Controllers\**" />
+    <EmbeddedResource Remove="Controllers\**" />
+    <None Remove="Controllers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\Recommendation.Application\Recommendation.Application.csproj" />
+    <ProjectReference Include="..\Recommendation.Infrastructure\Recommendation.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

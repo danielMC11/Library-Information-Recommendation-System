@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.GenAI" Version="1.6.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Recommendation.Domain\Recommendation.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
