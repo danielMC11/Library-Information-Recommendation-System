@@ -71,6 +71,7 @@ public class UploadBooksService
                 Year = ExtractYearFrom008(fields)
             };
 
+            // Autor principal (100)
             var authorName = CleanMarcText(GetField(fields, "100", 'a'));
             if (!string.IsNullOrWhiteSpace(authorName))
             {
@@ -82,6 +83,25 @@ public class UploadBooksService
                 currentBook.Authors.Add(author);
             }
 
+            // Autores adicionales (700)
+            foreach (var authorField in GetAllFields(fields, "700"))
+            {
+                var subfield = authorField.Subfields?.FirstOrDefault(s => s.Code == 'a');
+                if (subfield == null) continue;
+
+                var addAuthorName = CleanMarcText(subfield.Value.Value);
+
+                if (string.IsNullOrWhiteSpace(addAuthorName)) continue;
+
+                if (!authorsDb.TryGetValue(addAuthorName, out var addAuthor))
+                {
+                    addAuthor = new Author { Name = addAuthorName };
+                    authorsDb[addAuthorName] = addAuthor;
+                }
+
+                currentBook.Authors.Add(addAuthor);
+            }
+
             // 2. LÓGICA DE DUPLICADOS
             if (existingBooks.Any(b => b.Equals(currentBook)) || newBooks.Any(b => b.Equals(currentBook)))
             {
@@ -90,15 +110,22 @@ public class UploadBooksService
                 continue;
             }
 
-            // ... resto de la lógica de Temas ...
-            var topicName = CleanMarcText(GetField(fields, "650", 'a'));
-            if (!string.IsNullOrWhiteSpace(topicName))
+            // DESPUÉS (agrega TODOS los temas del libro)
+            foreach (var topicField in GetAllFields(fields, "650"))
             {
+                var subfield = topicField.Subfields?.FirstOrDefault(s => s.Code == 'a');
+                if (subfield == null) continue; // no existe el subcampo 'a'
+
+                var topicName = CleanMarcText(subfield.Value.Value); // .Value accede a la tupla, .Value al string
+            
+                if (string.IsNullOrWhiteSpace(topicName)) continue;
+
                 if (!topicsDb.TryGetValue(topicName, out var topic))
                 {
                     topic = new Topic { Name = topicName };
                     topicsDb[topicName] = topic;
                 }
+
                 currentBook.Topics.Add(topic);
             }
 
@@ -199,6 +226,12 @@ public class UploadBooksService
         // Esto evita la ambigüedad de subfield.Value.Value
         return subfield?.Value;
     }
+
+    private List<MarcField> GetAllFields(List<MarcField> fields, string tag)
+    {
+        return fields.Where(x => x.Tag == tag).ToList();
+    }
+
     private string? GetAllSubfields(List<MarcField> fields, string tag, params char[] codes)
     {
         var f = fields.FirstOrDefault(x => x.Tag == tag);
