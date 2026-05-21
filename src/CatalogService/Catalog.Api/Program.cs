@@ -68,6 +68,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // -------------------- DEPENDENCIES --------------------
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<UploadBooksService>();
+builder.Services.AddScoped<BookService>();
+
 
 // -------------------- JWT CONFIG --------------------
 var jwtKey = builder.Configuration["Jwt:Key"]

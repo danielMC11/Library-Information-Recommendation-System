@@ -17,4 +17,8 @@ public interface IBookRepository
     Task<IEnumerable<Author>> GetAllAuthorsAsync();
     Task<IEnumerable<Topic>> GetAllTopicsAsync();
 
+    Task<Book?> GetBookDetailsAsync(Guid bookId); 
+
+
+
 }

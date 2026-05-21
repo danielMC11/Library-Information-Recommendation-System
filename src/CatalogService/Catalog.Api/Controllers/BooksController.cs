@@ -1,4 +1,5 @@
 using Catalog.Api.DTOs;
+using Catalog.Application.Services;
 using Catalog.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +11,12 @@ namespace Catalog.Api.Controllers;
 public class BooksController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly BookService _bookService;
 
-    public BooksController(AppDbContext context)
+
+    public BooksController(AppDbContext context, BookService bookService)
     {
+        _bookService = bookService;
         _context = context;
     }
 
@@ -71,4 +75,25 @@ public class BooksController : ControllerBase
 
         return Ok(books);
     }
+
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetBookDetailsAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+            return BadRequest("El Id proporcionado no es válido.");
+
+       
+            var book = await _bookService.GetBookDetailsAsync(id);
+
+            if (book is null)
+                return NotFound($"No se encontró el libro con Id: {id}");
+
+            return Ok(book);
+        
+    }
+
+
+
+
 }

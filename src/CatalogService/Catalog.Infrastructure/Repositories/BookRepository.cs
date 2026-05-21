@@ -53,6 +53,16 @@ public class BookRepository: IBookRepository
     }
 
 
+    public async Task<Book?> GetBookDetailsAsync(Guid bookId)
+    {
+        return await _context.Books
+            .Include(b => b.Authors)
+            .Include(b => b.Topics)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == bookId);
+    }
+
+
 
 }
 
