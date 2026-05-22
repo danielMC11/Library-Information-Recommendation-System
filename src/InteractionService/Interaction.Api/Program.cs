@@ -56,12 +56,22 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // -------------------- DATABASE   
+var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("Interaction.Infrastructure")
-    )
-);
+{
+    if (useInMemoryDatabase)
+    {
+        options.UseInMemoryDatabase("InteractionInMemoryDb");
+    }
+    else
+    {
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            b => b.MigrationsAssembly("Interaction.Infrastructure")
+        );
+    }
+});
 
 
 // -------------------- DEPENDENCIES --------------------
@@ -69,6 +79,12 @@ builder.Services.AddScoped<Interaction.Application.Interfaces.IUserFavoriteRepos
 builder.Services.AddScoped<Interaction.Application.Services.SaveUserFavorite>();
 builder.Services.AddScoped<Interaction.Application.Services.GetUserFavoriteBook>();
 builder.Services.AddScoped<Interaction.Application.Services.CheckFavoriteBooksAsync>();
+
+// HttpClient para comunicarse con Catalog API
+builder.Services.AddHttpClient("catalog", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Catalog:BaseUrl"] ?? "http://localhost:5281");
+});
 
 
 // -------------------- JWT CONFIG --------------------
@@ -106,10 +122,13 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // -------------------- DATABASE MIGRATION --------------------
-using (var scope = app.Services.CreateScope())
+if (!useInMemoryDatabase)
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
 }
 
 

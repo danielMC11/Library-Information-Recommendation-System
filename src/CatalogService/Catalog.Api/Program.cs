@@ -2,16 +2,16 @@ using Catalog.Application.Interfaces;
 using Catalog.Application.Services;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Repositories;
+using Catalog.Api.Config;
+using Catalog.Api.Messaging;
+using Catalog.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
-using Catalog.Api.Config;
-using Catalog.Api.Messaging;
 using System.Text;
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,13 +60,22 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // -------------------- DATABASE   
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("Catalog.Infrastructure")
-    )
-);
+var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    if (useInMemoryDatabase)
+    {
+        options.UseInMemoryDatabase("CatalogDb");
+    }
+    else
+    {
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            b => b.MigrationsAssembly("Catalog.Infrastructure")
+        );
+    }
+});
 
 
 // -------------------- DEPENDENCIES --------------------
@@ -122,7 +131,16 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.Database.MigrateAsync();
+
+    if (useInMemoryDatabase)
+    {
+        await dbContext.Database.EnsureCreatedAsync();
+        await SeedCatalogDataAsync(dbContext);
+    }
+    else
+    {
+        await dbContext.Database.MigrateAsync();
+    }
 }
 
 // -------------------- PIPELINE --------------------
@@ -141,4 +159,37 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
+
+static async Task SeedCatalogDataAsync(AppDbContext dbContext)
+{
+    if (await dbContext.Books.AnyAsync())
+        return;
+
+    var book1 = new Book
+    {
+        Title = "Clean Code",
+        Isbn = "9780132350884",
+        Classification = "Programming",
+        Language = "English",
+        Year = "2008",
+        Summary = "A Handbook of Agile Software Craftsmanship."
+    };
+    book1.Authors.Add(new Author { Name = "Robert C. Martin" });
+    book1.Topics.Add(new Topic { Name = "Software Engineering" });
+
+    var book2 = new Book
+    {
+        Title = "Domain-Driven Design",
+        Isbn = "9780321125217",
+        Classification = "Programming",
+        Language = "English",
+        Year = "2003",
+        Summary = "Tackling Complexity in the Heart of Software."
+    };
+    book2.Authors.Add(new Author { Name = "Eric Evans" });
+    book2.Topics.Add(new Topic { Name = "Domain Modeling" });
+
+    dbContext.Books.AddRange(book1, book2);
+    await dbContext.SaveChangesAsync();
+}

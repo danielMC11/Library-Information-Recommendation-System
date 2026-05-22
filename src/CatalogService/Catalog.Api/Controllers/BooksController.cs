@@ -94,6 +94,35 @@ public class BooksController : ControllerBase
     }
 
 
+    // POST: api/books/details
+    [HttpPost("details")]
+    public async Task<ActionResult<IEnumerable<BookDto>>> GetBooksByIds([FromBody] List<Guid> ids)
+    {
+        if (ids == null || ids.Count == 0)
+            return BadRequest("La lista de ids no puede estar vacía.");
+
+        var books = await _context.Books
+            .Where(b => ids.Contains(b.Id))
+            .Include(b => b.Authors)
+            .Include(b => b.Topics)
+            .Select(b => new BookDto
+            {
+                Id = b.Id,
+                Isbn = b.Isbn,
+                Title = b.Title,
+                Classification = b.Classification,
+                Language = b.Language,
+                Year = b.Year,
+                Summary = b.Summary,
+                Authors = b.Authors.Select(a => a.Name).ToList(),
+                Topics = b.Topics.Select(t => t.Name).ToList()
+            })
+            .ToListAsync();
+
+        return Ok(books);
+    }
+
+
 
 
 }
