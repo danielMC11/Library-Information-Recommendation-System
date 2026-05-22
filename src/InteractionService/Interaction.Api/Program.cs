@@ -76,6 +76,12 @@ builder.Services.AddScoped<Interaction.Application.Services.SaveUserFavorite>();
 builder.Services.AddScoped<Interaction.Application.Services.GetUserFavoriteBook>();
 builder.Services.AddScoped<Interaction.Application.Services.CheckFavoriteBooksAsync>();
 
+// HttpClient para comunicarse con Catalog API
+builder.Services.AddHttpClient("catalog", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Catalog:BaseUrl"] ?? "http://localhost:5281");
+});
+
 
 builder.Services.AddScoped<Interaction.Application.Interfaces.IUserInteractionRepository, Interaction.Infrastructure.Repositories.UserInteractionRepository>();
 builder.Services.AddScoped<Interaction.Application.Services.SaveUserInteraction>();
