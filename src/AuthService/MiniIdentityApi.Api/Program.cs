@@ -16,7 +16,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost5173", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(
+            "http://localhost:5173",  // desarrollo local sin Docker
+            "http://localhost:3000"   // frontend en Docker
+        )
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -123,11 +126,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
 
 //CORSHOTFIX
 app.UseCors("AllowLocalhost5173");
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
