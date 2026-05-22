@@ -16,8 +16,11 @@ public class RabbitMQSettings
     public string CalculateEmbeddingQueueName { get; set; } = "";
 
     public string UserEventExchangeName { get; set; } = "";
-    public string UserEventRoutingKeyName { get; set; } = "";
-    public string UserEventRecommendationQueueName { get; set; } = "";
+    public string UserEventInteractionRoutingKeyName { get; set; } = "";
     public string UserEventInteractionQueueName { get; set; } = "";
+
+    public string UserEventRecommendationRoutingKeyName { get; set; } = "";
+
+    public string UserEventRecommendationQueueName { get; set; } = "";
 
 }

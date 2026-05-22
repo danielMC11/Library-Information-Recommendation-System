@@ -1,4 +1,4 @@
-﻿using Recommendation.Domain.Entities;
+using Recommendation.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,5 +10,6 @@ public  interface IVectorRepository
 {    
 
     Task SaveBatchAsync(IEnumerable<BookVectorRecord> records);
+    Task<List<BookVectorRecord>> GetVectorsByBookIdsAsync(IEnumerable<Guid> bookIds);
 
 }

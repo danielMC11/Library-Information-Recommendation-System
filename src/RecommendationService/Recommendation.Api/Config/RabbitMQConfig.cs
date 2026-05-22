@@ -99,7 +99,7 @@ public class RabbitMQConfig : IHostedService
             await _channel.QueueBindAsync(
                 queue: _settings.UserEventInteractionQueueName,
                 exchange: _settings.UserEventExchangeName,
-                routingKey: _settings.UserEventRoutingKeyName,
+                routingKey: _settings.UserEventInteractionRoutingKeyName,
                 arguments: null,
                 cancellationToken: cancellationToken);
 
@@ -107,12 +107,11 @@ public class RabbitMQConfig : IHostedService
             await _channel.QueueBindAsync(
                 queue: _settings.UserEventRecommendationQueueName,
                 exchange: _settings.UserEventExchangeName,
-                routingKey: _settings.UserEventRoutingKeyName,
+                routingKey: _settings.UserEventRecommendationRoutingKeyName,
                 arguments: null,
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation("RabbitMQ UserEvent setup completed: Exchange {Exchange}, InteractionQueue {IQueue}, RecommendationQueue {RQueue}, RoutingKey {RoutingKey}", 
-                _settings.UserEventExchangeName, _settings.UserEventInteractionQueueName, _settings.UserEventRecommendationQueueName, _settings.UserEventRoutingKeyName);
+            _logger.LogInformation("RabbitMQ UserEvent setup completed");
         }
         catch (Exception ex)
         {

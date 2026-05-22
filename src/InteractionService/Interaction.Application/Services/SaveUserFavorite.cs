@@ -1,6 +1,7 @@
 using Interaction.Application.DTOs;
 using Interaction.Application.Interfaces;
 using Interaction.Domain.Entities;
+using Interaction.Domain.enums;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,10 +11,12 @@ namespace Interaction.Application.Services;
 public class SaveUserFavorite
 {
     private readonly IUserFavoriteRepository _repository;
+    private readonly SaveUserInteraction _saveUserInteraction;
 
-    public SaveUserFavorite(IUserFavoriteRepository repository)
+    public SaveUserFavorite(IUserFavoriteRepository repository, SaveUserInteraction saveUserInteraction)
     {
         _repository = repository;
+        _saveUserInteraction = saveUserInteraction;
     }
 
     public async Task<UserFavoriteDto> ExecuteAsync(Guid userId, Guid bookId)
@@ -50,6 +53,12 @@ public class SaveUserFavorite
         };
 
         await _repository.SaveUserFavoriteBookAsync(userFavorite);
+
+        await _saveUserInteraction.ExecuteAsync(new Events.UserInteractionEvent {
+            UserId = userId,
+            BookIds = new List<Guid> { bookId },
+            InteractionType = "FAVORITE"
+        });
 
         return new UserFavoriteDto
         {

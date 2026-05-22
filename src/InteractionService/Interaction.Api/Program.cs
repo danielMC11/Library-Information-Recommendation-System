@@ -86,6 +86,8 @@ builder.Services.AddHttpClient("catalog", client =>
 builder.Services.AddScoped<Interaction.Application.Interfaces.IUserInteractionRepository, Interaction.Infrastructure.Repositories.UserInteractionRepository>();
 builder.Services.AddScoped<Interaction.Application.Services.SaveUserInteraction>();
 
+builder.Services.AddSingleton<Interaction.Application.Interfaces.IUserProfilePublisher, Interaction.Api.Messaging.UserProfilePublisher>();
+
 builder.Services.AddHostedService<Interaction.Api.Messaging.InteractionListener>();
 
 

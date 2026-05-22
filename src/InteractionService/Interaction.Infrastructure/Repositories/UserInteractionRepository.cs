@@ -1,6 +1,9 @@
 using Interaction.Application.Interfaces;
 using Interaction.Domain.Entities;
 using Interaction.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Interaction.Domain.Entities;
+using Interaction.Infrastructure.Persistence;
 
 namespace Interaction.Infrastructure.Repositories;
 
@@ -17,5 +20,12 @@ public class UserInteractionRepository : IUserInteractionRepository
     {
         await _context.InteractionEvents.AddRangeAsync(interactionEvents);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<InteractionEvent>> GetUserInteractionsAsync(Guid userId)
+    {
+        return await _context.InteractionEvents
+            .Where(i => i.UserId == userId)
+            .ToListAsync();
     }
 }

@@ -1,4 +1,4 @@
-using Interaction.Application.Enums;
+using Interaction.Domain.enums;
 using Interaction.Application.Events;
 using Interaction.Application.Interfaces;
 using Interaction.Domain.Entities;
@@ -12,10 +12,12 @@ namespace Interaction.Application.Services;
 public class SaveUserInteraction
 {
     private readonly IUserInteractionRepository _repository;
+    private readonly IUserProfilePublisher _publisher;
 
-    public SaveUserInteraction(IUserInteractionRepository repository)
+    public SaveUserInteraction(IUserInteractionRepository repository, IUserProfilePublisher publisher)
     {
         _repository = repository;
+        _publisher = publisher;
     }
 
     public async Task ExecuteAsync(UserInteractionEvent userInteractionEvent)
@@ -38,5 +40,19 @@ public class SaveUserInteraction
         }).ToList();
 
         await _repository.SaveUserInteractionAsync(interactionEvents);
+
+        // Check total interactions for the user
+        var userInteractions = await _repository.GetUserInteractionsAsync(userInteractionEvent.UserId);
+        
+        // Ensure we only trigger when exactly 3 records are reached
+        if (userInteractions.Count == 3)
+        {
+            var profileEvent = new UserProfileCalculationEvent
+            {
+                UserId = userInteractionEvent.UserId,
+                BookIds = userInteractions.Select(i => i.BookId).Distinct().ToList()
+            };
+            await _publisher.PublishUserProfileCalculationEventAsync(profileEvent);
+        }
     }
 }

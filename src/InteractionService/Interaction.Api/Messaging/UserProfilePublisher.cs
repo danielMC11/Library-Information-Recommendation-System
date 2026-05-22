@@ -1,22 +1,24 @@
-﻿using Catalog.Api.Config;
-using Catalog.Application.Events;
+using Catalog.Api.Config;
+using Interaction.Application.Events;
+using Interaction.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-
-
+using System;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace Catalog.Api.Messaging;
+namespace Interaction.Api.Messaging;
 
-public class BookInteractionPublisher
+public class UserProfilePublisher : IUserProfilePublisher
 {
     private readonly RabbitMQSettings _settings;
-    private readonly ILogger<BookInteractionPublisher> _logger;
+    private readonly ILogger<UserProfilePublisher> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public BookInteractionPublisher(IOptions<RabbitMQSettings> settings, ILogger<BookInteractionPublisher> logger)
+    public UserProfilePublisher(IOptions<RabbitMQSettings> settings, ILogger<UserProfilePublisher> logger)
     {
         _settings = settings.Value;
         _logger = logger;
@@ -39,7 +41,7 @@ public class BookInteractionPublisher
         _channel = await _connection.CreateChannelAsync();
     }
 
-    public async Task PublishUserInteractionAsync(UserInteractionEvent @event)
+    public async Task PublishUserProfileCalculationEventAsync(UserProfileCalculationEvent @event)
     {
         try
         {
@@ -60,20 +62,18 @@ public class BookInteractionPublisher
 
             await _channel.BasicPublishAsync(
                 exchange: _settings.UserEventExchangeName,
-                routingKey: _settings.UserEventInteractionRoutingKeyName,
+                routingKey: _settings.UserEventRecommendationRoutingKeyName,
                 mandatory: true,
                 basicProperties: properties,
                 body: body);
 
-            _logger.LogInformation("Interaccion de Usuario {Event} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
-                @event.InteractionType, _settings.UserEventExchangeName, _settings.UserEventInteractionRoutingKeyName);
+            _logger.LogInformation("UserProfileCalculationEvent for User {UserId} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
+                @event.UserId, _settings.UserEventExchangeName, _settings.UserEventRecommendationRoutingKeyName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al publicar NewBookBatchEvent en RabbitMQ");
+            _logger.LogError(ex, "Error al publicar UserProfileCalculationEvent en RabbitMQ");
             throw;
         }
     }
-
-
 }

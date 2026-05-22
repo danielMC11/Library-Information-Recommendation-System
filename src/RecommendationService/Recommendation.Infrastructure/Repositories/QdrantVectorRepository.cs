@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using Recommendation.Application.Interfaces;
@@ -50,6 +50,40 @@ public class QdrantVectorRepository : IVectorRepository
 
         // 3. Inserción masiva ultra eficiente
         await _qdrantClient.UpsertAsync(CollectionName, points);
+    }
+
+    public async Task<List<BookVectorRecord>> GetVectorsByBookIdsAsync(IEnumerable<Guid> bookIds)
+    {
+        var pointIds = bookIds.Select(id => (PointId)id).ToList();
+        
+        var points = await _qdrantClient.RetrieveAsync(
+            collectionName: CollectionName,
+            ids: pointIds,
+            withVectors: true,
+            withPayload: true
+        );
+
+        var records = new List<BookVectorRecord>();
+        foreach (var point in points)
+        {
+            var id = point.Id.Uuid; // or parsing from whatever format
+            // In Qdrant .NET Client, point.Id.HasUuid might be true.
+            Guid guidId = Guid.Parse(point.Id.Uuid);
+            
+            // For now, getting vector as array of floats
+            var vector = point.Vectors.Vector.Data.ToArray();
+            
+            // Get payload
+            var metadata = new Dictionary<string, string>();
+            foreach (var p in point.Payload)
+            {
+                metadata[p.Key] = p.Value.StringValue;
+            }
+
+            records.Add(new BookVectorRecord(guidId, vector, metadata));
+        }
+
+        return records;
     }
 }
 

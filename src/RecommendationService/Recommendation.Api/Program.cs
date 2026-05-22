@@ -22,11 +22,13 @@ builder.Services.AddScoped<Recommendation.Application.Interfaces.IVectorReposito
 builder.Services.AddScoped<GeminiEmbeddingService>();
 builder.Services.AddScoped<QdrantService>();
 builder.Services.AddScoped<ProcessBooksBatchService>();
+builder.Services.AddScoped<CalculateUserProfileVectorService>();
 
 // RabbitMQConfig primero: crea el exchange/queue/binding al arrancar
 builder.Services.AddHostedService<RabbitMQConfig>();
 // Listener: se registra después para que el binding ya exista
 builder.Services.AddHostedService<RecommendationEmbeddingListener>();
+builder.Services.AddHostedService<InteractionProfileListener>();
 
 var app = builder.Build();
 

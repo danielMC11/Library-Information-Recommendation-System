@@ -7,4 +7,5 @@ namespace Interaction.Application.Interfaces;
 public interface IUserInteractionRepository
 {
     Task SaveUserInteractionAsync(IEnumerable<InteractionEvent> interactionEvents);
+    Task<List<InteractionEvent>> GetUserInteractionsAsync(Guid userId);
 }
