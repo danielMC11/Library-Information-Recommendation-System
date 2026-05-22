@@ -155,9 +155,9 @@ services:
       - ASPNETCORE_HTTP_PORTS=5144
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=interaction_postgres;Port=5432;Database=interaction_db;Username=postgres;Password=secret-postgres
-      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__Port=5672
-      - RabbitMQ__Username=guest
+      - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
       - Catalog__BaseUrl=http://library-service:5281
     depends_on:
