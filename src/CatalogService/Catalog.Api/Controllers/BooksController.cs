@@ -1,8 +1,15 @@
 using Catalog.Api.DTOs;
+using Catalog.Api.Enums;
+using Catalog.Application.Events;
+using Catalog.Api.Messaging;
 using Catalog.Application.Services;
+using Catalog.Domain.Entities;
 using Catalog.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+
 
 namespace Catalog.Api.Controllers;
 
@@ -12,12 +19,14 @@ public class BooksController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly BookService _bookService;
+    private readonly BookInteractionPublisher _publisher;
 
 
-    public BooksController(AppDbContext context, BookService bookService)
+    public BooksController(AppDbContext context, BookService bookService, BookInteractionPublisher publisher)
     {
         _bookService = bookService;
         _context = context;
+        _publisher = publisher;
     }
 
     // GET: api/books?page=1&pageSize=10
@@ -47,9 +56,16 @@ public class BooksController : ControllerBase
     }
 
     // GET: api/books/search?name=palabra
+    [Authorize]
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<BookDto>>> SearchBooks([FromQuery] string name)
     {
+
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? User.FindFirst("sub")?.Value
+        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+
         if (string.IsNullOrWhiteSpace(name))
             return BadRequest("El término de búsqueda no puede estar vacío.");
 
@@ -73,21 +89,44 @@ public class BooksController : ControllerBase
             })
             .ToListAsync();
 
+
+        await _publisher.PublishUserInteractionAsync(new UserInteractionEvent
+        {
+            BookIds = books.Select(b => b.Id).ToList(),
+            UserId = Guid.Parse(userIdClaim),
+            InteractionType = InteractionType.SEARCH.ToString()
+        });
+
+
         return Ok(books);
     }
 
 
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetBookDetailsAsync(Guid id)
     {
+
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? User.FindFirst("sub")?.Value
+        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
         if (id == Guid.Empty)
             return BadRequest("El Id proporcionado no es válido.");
 
-       
-            var book = await _bookService.GetBookDetailsAsync(id);
 
-            if (book is null)
-                return NotFound($"No se encontró el libro con Id: {id}");
+        var book = await _bookService.GetBookDetailsAsync(id);
+
+        if (book is null)
+            return NotFound($"No se encontró el libro con Id: {id}");
+
+
+            await _publisher.PublishUserInteractionAsync(new UserInteractionEvent
+            {
+                BookIds = new List<Guid> { book.Id },
+                UserId =  Guid.Parse(userIdClaim), 
+                InteractionType = InteractionType.VIEW.ToString()
+             });
 
             return Ok(book);
         

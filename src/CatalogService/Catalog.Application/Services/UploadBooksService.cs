@@ -22,7 +22,7 @@ public class UploadBooksService
     }
 
 
-    public async Task<(UploadResponseDto Metrics, List<Recommendation.Application.DTOs.BookItemDTO> LoadedBooks)> ProcessIso2709Async(byte[] fileBytes)
+    public async Task<(UploadResponseDto Metrics, List<BookItemDTO> LoadedBooks)> ProcessIso2709Async(byte[] fileBytes)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var encoding = Encoding.GetEncoding("iso-8859-1",
@@ -136,7 +136,7 @@ public class UploadBooksService
         response.TotalSaved = newBooks.Count;
         response.TotalSkipped = skippedCount;
 
-        var loadedBooksDto = new List<Recommendation.Application.DTOs.BookItemDTO>();
+        var loadedBooksDto = new List<BookItemDTO>();
 
         if (newBooks.Any())
         {
@@ -166,7 +166,7 @@ public class UploadBooksService
 
                     var text = string.Join(". ", textParts) + ".";
 
-                    loadedBooksDto.Add(new Recommendation.Application.DTOs.BookItemDTO 
+                    loadedBooksDto.Add(new BookItemDTO 
                     { 
                         BookId = book.Id, 
                         Text = text 

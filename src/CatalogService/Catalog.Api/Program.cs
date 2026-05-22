@@ -82,6 +82,8 @@ builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<UploadBooksService>();
 builder.Services.AddScoped<BookService>();
 builder.Services.AddSingleton<CatalogUploadPublisher>();
+builder.Services.AddSingleton<BookInteractionPublisher>();
+
 
 
 // -------------------- JWT CONFIG --------------------

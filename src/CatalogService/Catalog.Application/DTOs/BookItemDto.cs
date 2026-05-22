@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Recommendation.Application.DTOs;
+namespace Catalog.Application.DTOs;
 public class BookItemDTO
 {
     public Guid BookId { get; set; } 

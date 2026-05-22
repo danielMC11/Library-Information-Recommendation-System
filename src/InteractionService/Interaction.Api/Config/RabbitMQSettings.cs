@@ -8,13 +8,7 @@ public class RabbitMQSettings
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string VirtualHost { get; set; } = "/";
-
-    public string CalculateEmbeddingExchangeName { get; set; } = "";
-
-    public string CalculateEmbeddingRoutingKeyName { get; set; } = "";
-    public string UserEventExchangeName { get; set; } = "";
-    public string UserEventRoutingKeyName { get; set; } = "";
     public string UserEventInteractionQueueName { get; set; } = "";
-    public string UserEventRecommendationQueueName { get; set; } = "";
+
 
 }

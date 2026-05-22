@@ -1,8 +1,9 @@
+using Catalog.Api.Config;
 using Interaction.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
 
 
@@ -65,10 +66,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 // -------------------- DEPENDENCIES --------------------
+
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName)
+);
+
 builder.Services.AddScoped<Interaction.Application.Interfaces.IUserFavoriteRepository, Interaction.Infrastructure.Repositories.UserFavoriteRepository>();
 builder.Services.AddScoped<Interaction.Application.Services.SaveUserFavorite>();
 builder.Services.AddScoped<Interaction.Application.Services.GetUserFavoriteBook>();
 builder.Services.AddScoped<Interaction.Application.Services.CheckFavoriteBooksAsync>();
+
+
+builder.Services.AddScoped<Interaction.Application.Interfaces.IUserInteractionRepository, Interaction.Infrastructure.Repositories.UserInteractionRepository>();
+builder.Services.AddScoped<Interaction.Application.Services.SaveUserInteraction>();
+
+builder.Services.AddHostedService<Interaction.Api.Messaging.InteractionListener>();
+
+
 
 
 // -------------------- JWT CONFIG --------------------

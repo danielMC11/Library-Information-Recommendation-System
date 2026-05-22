@@ -63,8 +63,56 @@ public class RabbitMQConfig : IHostedService
                 arguments: null,
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation("RabbitMQ setup completed: Exchange {Exchange}, Queue {Queue}, RoutingKey {RoutingKey}", 
+            _logger.LogInformation("RabbitMQ Embedding setup completed: Exchange {Exchange}, Queue {Queue}, RoutingKey {RoutingKey}", 
                 _settings.CalculateEmbeddingExchangeName, _settings.CalculateEmbeddingQueueName, _settings.CalculateEmbeddingRoutingKeyName);
+
+            // ==================== USER EVENT ====================
+
+            // Declarar Exchange para User Events
+            await _channel.ExchangeDeclareAsync(
+                exchange: _settings.UserEventExchangeName,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            // Declarar Queue de Interaction
+            await _channel.QueueDeclareAsync(
+                queue: _settings.UserEventInteractionQueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            // Declarar Queue de Recommendation
+            await _channel.QueueDeclareAsync(
+                queue: _settings.UserEventRecommendationQueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            // Binding: Interaction Queue <-> UserEvent Exchange
+            await _channel.QueueBindAsync(
+                queue: _settings.UserEventInteractionQueueName,
+                exchange: _settings.UserEventExchangeName,
+                routingKey: _settings.UserEventRoutingKeyName,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            // Binding: Recommendation Queue <-> UserEvent Exchange
+            await _channel.QueueBindAsync(
+                queue: _settings.UserEventRecommendationQueueName,
+                exchange: _settings.UserEventExchangeName,
+                routingKey: _settings.UserEventRoutingKeyName,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation("RabbitMQ UserEvent setup completed: Exchange {Exchange}, InteractionQueue {IQueue}, RecommendationQueue {RQueue}, RoutingKey {RoutingKey}", 
+                _settings.UserEventExchangeName, _settings.UserEventInteractionQueueName, _settings.UserEventRecommendationQueueName, _settings.UserEventRoutingKeyName);
         }
         catch (Exception ex)
         {

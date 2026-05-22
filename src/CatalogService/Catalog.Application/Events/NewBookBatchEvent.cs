@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Recommendation.Application.DTOs;
+using Catalog.Application.DTOs;
 
-namespace Recommendation.Application.Events;
+namespace Catalog.Application.Events;
 public class NewBookBatchEvent
 {
 

@@ -3,7 +3,7 @@ using Catalog.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Catalog.Api.Messaging;
-using Recommendation.Application.Events;
+using Catalog.Application.Events;
 
 namespace Catalog.Api.Controllers;
 

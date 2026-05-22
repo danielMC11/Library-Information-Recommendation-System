@@ -1,23 +1,22 @@
-using Catalog.Api.Config;
-using Microsoft.Extensions.Logging;
+﻿using Catalog.Api.Config;
+using Catalog.Application.Events;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using Catalog.Application.Events;
-using System;
+
+
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Catalog.Api.Messaging;
 
-public class CatalogUploadPublisher
+public class BookInteractionPublisher
 {
     private readonly RabbitMQSettings _settings;
-    private readonly ILogger<CatalogUploadPublisher> _logger;
+    private readonly ILogger<BookInteractionPublisher> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public CatalogUploadPublisher(IOptions<RabbitMQSettings> settings, ILogger<CatalogUploadPublisher> logger)
+    public BookInteractionPublisher(IOptions<RabbitMQSettings> settings, ILogger<BookInteractionPublisher> logger)
     {
         _settings = settings.Value;
         _logger = logger;
@@ -40,7 +39,7 @@ public class CatalogUploadPublisher
         _channel = await _connection.CreateChannelAsync();
     }
 
-    public async Task PublishNewBookBatchAsync(NewBookBatchEvent @event)
+    public async Task PublishUserInteractionAsync(UserInteractionEvent @event)
     {
         try
         {
@@ -60,14 +59,14 @@ public class CatalogUploadPublisher
             };
 
             await _channel.BasicPublishAsync(
-                exchange: _settings.CalculateEmbeddingExchangeName,
-                routingKey: _settings.CalculateEmbeddingRoutingKeyName,
+                exchange: _settings.UserEventExchangeName,
+                routingKey: _settings.UserEventRoutingKeyName,
                 mandatory: true,
                 basicProperties: properties,
                 body: body);
 
-            _logger.LogInformation("Lote de {Count} libros publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
-                @event.Books.Count, _settings.CalculateEmbeddingExchangeName, _settings.CalculateEmbeddingRoutingKeyName);
+            _logger.LogInformation("Interaccion de Usuario {Event} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
+                @event.InteractionType, _settings.UserEventExchangeName, _settings.UserEventRoutingKeyName);
         }
         catch (Exception ex)
         {
@@ -75,4 +74,6 @@ public class CatalogUploadPublisher
             throw;
         }
     }
+
+
 }

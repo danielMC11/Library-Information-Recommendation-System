@@ -1,4 +1,4 @@
-﻿namespace Recommendation.Api.Config;
+namespace Recommendation.Api.Config;
 public class RabbitMQSettings
 {
     public const string SectionName = "RabbitMQ";
@@ -14,4 +14,10 @@ public class RabbitMQSettings
     public string CalculateEmbeddingRoutingKeyName { get; set; } = "";
 
     public string CalculateEmbeddingQueueName { get; set; } = "";
+
+    public string UserEventExchangeName { get; set; } = "";
+    public string UserEventRoutingKeyName { get; set; } = "";
+    public string UserEventRecommendationQueueName { get; set; } = "";
+    public string UserEventInteractionQueueName { get; set; } = "";
+
 }
