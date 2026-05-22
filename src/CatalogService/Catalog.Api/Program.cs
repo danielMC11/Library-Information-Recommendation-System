@@ -60,22 +60,12 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // -------------------- DATABASE   
-var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    if (useInMemoryDatabase)
-    {
-        options.UseInMemoryDatabase("CatalogDb");
-    }
-    else
-    {
-        options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection"),
-            b => b.MigrationsAssembly("Catalog.Infrastructure")
-        );
-    }
-});
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("Catalog.Infrastructure")
+    )
+);
 
 
 // -------------------- DEPENDENCIES --------------------
@@ -131,16 +121,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    if (useInMemoryDatabase)
-    {
-        await dbContext.Database.EnsureCreatedAsync();
-        await SeedCatalogDataAsync(dbContext);
-    }
-    else
-    {
-        await dbContext.Database.MigrateAsync();
-    }
+    await dbContext.Database.MigrateAsync();
 }
 
 // -------------------- PIPELINE --------------------

@@ -56,22 +56,12 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // -------------------- DATABASE   
-var useInMemoryDatabase = builder.Configuration.GetValue<bool>("UseInMemoryDatabase");
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    if (useInMemoryDatabase)
-    {
-        options.UseInMemoryDatabase("InteractionInMemoryDb");
-    }
-    else
-    {
-        options.UseNpgsql(
-            builder.Configuration.GetConnectionString("DefaultConnection"),
-            b => b.MigrationsAssembly("Interaction.Infrastructure")
-        );
-    }
-});
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("Interaction.Infrastructure")
+    )
+);
 
 
 // -------------------- DEPENDENCIES --------------------
@@ -122,13 +112,10 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // -------------------- DATABASE MIGRATION --------------------
-if (!useInMemoryDatabase)
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dbContext.Database.MigrateAsync();
-    }
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
 }
 
 
