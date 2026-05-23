@@ -407,6 +407,38 @@ For detailed API endpoints and request/response formats, visit the Swagger UI wh
 
 ---
 
+## Dockering Services and Frontend
+### Preparativos
+Estando en la raíz del proyecto (El backend), clone el codigo del frontend a la ruta
+```powershell
+cd ../proyecotelfrontend/ProyectTelFrontend
+```
+donde *ProyectTelFrontend* es la raíz del codigo del frontend.
+
+Despues de eso, regrese a la raíz del backend.
+
+Luego ejecute el siguiente comando para ejecutar el archivo de composicion de la aplicación:
+
+```powershell
+docker-compose -f docker-compose.prod.yml build --no-cache
+```
+Esto construirá las imagenes definidas en los Dockerfiles presentes tanto el el repositorio del frontend como los establecidos en el repositorio del backend (4 en total), ademas de los servicios suplementarios como lo son RabbitMQ o Qdrant.
+
+Para levantar los contenedores creados en el paso anterior, use:
+
+```powershell
+docker-compose -f docker-compose.prod.yml up -d
+```
+En este momento, el frontend dockerizado será accesible a travez de la URL: *http://localhost:3000*
+
+Y, en el caso que desee finalizar la ejecución de los contenedores, use:
+```powershell
+docker-compose -f docker-compose.prod.yml down
+```
+
+
+
+
 ## License
 
 This project is provided as-is for educational purposes.
