@@ -17,8 +17,11 @@ public interface IBookRepository
     Task<IEnumerable<Author>> GetAllAuthorsAsync();
     Task<IEnumerable<Topic>> GetAllTopicsAsync();
 
-    Task<Book?> GetBookDetailsAsync(Guid bookId); 
+    Task<Book?> GetBookDetailsAsync(Guid bookId);
 
+    Task<List<Book>> GetBooksPagedAsync(int page, int pageSize);
 
+    Task<List<Book>> SearchBooksAsync(string name);
 
+    Task<List<Book>> GetBooksByIdsAsync(List<Guid> ids);
 }

@@ -78,8 +78,8 @@ builder.Services.Configure<RabbitMQSettings>(
 
 
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<UploadBooksService>();
-builder.Services.AddScoped<BookService>();
 builder.Services.AddSingleton<CatalogUploadPublisher>();
 builder.Services.AddSingleton<BookInteractionPublisher>();
 

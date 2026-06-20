@@ -62,7 +62,36 @@ public class BookRepository: IBookRepository
             .FirstOrDefaultAsync(b => b.Id == bookId);
     }
 
+    public async Task<List<Book>> GetBooksPagedAsync(int page, int pageSize)
+    {
+        return await _context.Books
+            .Include(b => b.Authors)
+            .Include(b => b.Topics)
+            .AsNoTracking()
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
 
+    public async Task<List<Book>> SearchBooksAsync(string name)
+    {
+        return await _context.Books
+            .Include(b => b.Authors)
+            .Include(b => b.Topics)
+            .AsNoTracking()
+            .Where(b => b.Title.Contains(name))
+            .Take(50)
+            .ToListAsync();
+    }
 
+    public async Task<List<Book>> GetBooksByIdsAsync(List<Guid> ids)
+    {
+        return await _context.Books
+            .Include(b => b.Authors)
+            .Include(b => b.Topics)
+            .AsNoTracking()
+            .Where(b => ids.Contains(b.Id))
+            .ToListAsync();
+    }
 }
 
