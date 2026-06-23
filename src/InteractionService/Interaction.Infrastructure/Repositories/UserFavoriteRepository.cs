@@ -35,5 +35,17 @@ public class UserFavoriteRepository : IUserFavoriteRepository
         return await _context.UserFavorites
             .AnyAsync(uf => uf.UserId == userId && uf.BookId == bookId);
     }
+
+    public async Task DeleteUserFavoriteBookAsync(Guid userId, Guid bookId)
+    {
+        var favorite = await _context.UserFavorites
+            .FirstOrDefaultAsync(uf => uf.UserId == userId && uf.BookId == bookId);
+
+        if (favorite != null)
+        {
+            _context.UserFavorites.Remove(favorite);
+            await _context.SaveChangesAsync();
+        }
+    }
 }
 

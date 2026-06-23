@@ -97,4 +97,26 @@ public class UserFavoriteService
             CreatedAt = userFavorite.CreatedAt
         };
     }
+
+    public async Task DeleteFavoriteAsync(Guid userId, Guid bookId)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId cannot be empty.", nameof(userId));
+
+        if (bookId == Guid.Empty)
+            throw new ArgumentException("BookId cannot be empty.", nameof(bookId));
+
+        var isFavorite = await _repository.CheckUserFavoriteBookAsync(userId, bookId);
+        if (!isFavorite)
+            throw new InvalidOperationException($"Book {bookId} is not a favorite of user {userId}.");
+
+        await _repository.DeleteUserFavoriteBookAsync(userId, bookId);
+
+        await _userInteractionService.ExecuteAsync(new UserInteractionEvent
+        {
+            UserId = userId,
+            BookIds = new List<Guid> { bookId },
+            InteractionType = "UNFAVORITE"
+        });
+    }
 }

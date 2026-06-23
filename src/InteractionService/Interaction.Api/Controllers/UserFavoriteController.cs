@@ -88,4 +88,31 @@ public class UserFavoriteController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    [Authorize]
+    [HttpDelete("delete/{bookId:guid}")]
+    public async Task<IActionResult> DeleteFavorite([FromRoute] Guid bookId)
+    {
+
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+        ?? User.FindFirst("sub")?.Value
+        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized("Token inválido.");
+
+        try
+        {
+            await _favoriteService.DeleteFavoriteAsync(userId, bookId);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
