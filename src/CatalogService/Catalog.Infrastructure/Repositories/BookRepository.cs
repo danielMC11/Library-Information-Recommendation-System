@@ -19,14 +19,18 @@ public class BookRepository: IBookRepository
         _context = context;
     }
 
-    public async Task SaveAllAsync(IEnumerable<Book> books)
+    public async Task<List<Book>> SaveAllAsync(IEnumerable<Book> books)
     {
+        var booksList = books.ToList();
+
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            _context.Books.AddRange(books);
+            await _context.Books.AddRangeAsync(booksList);
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
+
+            return booksList;
         }
         catch
         {

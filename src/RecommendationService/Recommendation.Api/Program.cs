@@ -1,9 +1,16 @@
+using DotNetEnv;
 using Microsoft.VisualBasic;
-using Recommendation.Api.Config;
+using Shared.Config;
 using Recommendation.Api.Messaging;
 using Recommendation.Application.Services;
+using Recommendation.Infrastructure.Messaging;
+using Recommendation.Infrastructure.Messaging.Config;
+
+Env.Load(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 
@@ -27,8 +34,8 @@ builder.Services.AddScoped<CalculateUserProfileVectorService>();
 // RabbitMQConfig primero: crea el exchange/queue/binding al arrancar
 builder.Services.AddHostedService<RabbitMQConfig>();
 // Listener: se registra después para que el binding ya exista
-builder.Services.AddHostedService<RecommendationEmbeddingListener>();
-builder.Services.AddHostedService<InteractionProfileListener>();
+builder.Services.AddHostedService<BooksUploadedListener>();
+builder.Services.AddHostedService<UserInteractionsAccumulatedListener>();
 
 var app = builder.Build();
 

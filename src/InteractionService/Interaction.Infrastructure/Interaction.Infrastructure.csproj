@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,12 +8,18 @@
 
  <ItemGroup>
   <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />
+  <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
   <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  <PackageReference Include="RabbitMQ.Client" Version="7.2.1" />
 </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Interaction.Domain\Interaction.Domain.csproj" />
     <ProjectReference Include="..\Interaction.Application\Interaction.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Messaging\Config\" />
   </ItemGroup>
 
 </Project>

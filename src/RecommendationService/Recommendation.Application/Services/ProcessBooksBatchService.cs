@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Configuration;
-using Recommendation.Application.Events;
+using Shared.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,31 +25,31 @@ public class ProcessBooksBatchService
     }
 
 
-    public async Task ProcessEmbeddingsAsync(NewBookBatchEvent @event)
+    public async Task ProcessEmbeddingsAsync(BooksUploadedEvent @event)
     {
         var records = new List<BookVectorRecord>();
 
         foreach (var book in @event.Books)
         {
-            _logger.LogInformation("Procesando embedding para BookId: {BookId}", book.BookId);
+            _logger.LogInformation("Procesando embedding para BookId: {BookId}", book.Id);
              
             try
             {
-                var vector = await _geminiEmbeddingService.GenerateEmbeddingAsync(book.Text);
+                var vector = await _geminiEmbeddingService.GenerateEmbeddingAsync(book.Description);
 
                 var metadata = new Dictionary<string, string>
                 {
-                    { "bookId", book.BookId.ToString() }
+                    { "bookId", book.Id.ToString() }
                 };
 
-                records.Add(new BookVectorRecord(book.BookId, vector, metadata));
+                records.Add(new BookVectorRecord(book.Id, vector, metadata));
 
                 // Límite de 80 peticiones por minuto a Gemini (60000ms / 80 = 750ms)
                 await Task.Delay(750);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al generar embedding para BookId: {BookId}", book.BookId);
+                _logger.LogError(ex, "Error al generar embedding para BookId: {BookId}", book.Id);
             }
         }
 

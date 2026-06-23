@@ -29,5 +29,8 @@
         <Project Path="src/RecommendationService/Recommendation.Domain/Recommendation.Domain.csproj" Id="f62034df-beaa-4ec2-8847-3b7b7099a0db" />
         <Project Path="src/RecommendationService/Recommendation.Infrastructure/Recommendation.Infrastructure.csproj" Id="ccc22acd-21d6-4fbe-83c6-169877a42fe9" />
     </Folder>
+    <Folder Name="/Shared/">
+        <Project Path="src/Shared/Shared/Shared.csproj" Id="027289e4-fc20-4284-9798-220d744f5a82" />
+    </Folder>
 
 </Solution>

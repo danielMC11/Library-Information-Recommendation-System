@@ -1,6 +1,7 @@
-using Catalog.Application.DTOs;
+using Shared.DTOs;
 using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
+using Shared.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,16 +14,19 @@ namespace Catalog.Application.Services;
 public class UploadBooksService
 {
     private readonly IBookRepository _repository;
-    private readonly ILogger<UploadBooksService> _logger;   
+    private readonly ILogger<UploadBooksService> _logger;
+    private readonly IBooksUploadedPublisher _publisher;
 
-    public UploadBooksService(IBookRepository repository, ILogger<UploadBooksService> logger)
+
+    public UploadBooksService(IBookRepository repository, ILogger<UploadBooksService> logger, IBooksUploadedPublisher publisher)
     {
         _repository = repository;
         _logger = logger;
+        _publisher = publisher;
     }
 
 
-    public async Task<(UploadResponseDto Metrics, List<BookItemDTO> LoadedBooks)> ProcessIso2709Async(byte[] fileBytes)
+    public async Task<UploadResponseDto> ProcessIso2709Async(byte[] fileBytes)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var encoding = Encoding.GetEncoding("iso-8859-1",
@@ -136,42 +140,22 @@ public class UploadBooksService
         response.TotalSaved = newBooks.Count;
         response.TotalSkipped = skippedCount;
 
-        var loadedBooksDto = new List<BookItemDTO>();
-
         if (newBooks.Any())
         {
             try
             {
-                await _repository.SaveAllAsync(newBooks);
+                List<Book> savedBooks = await _repository.SaveAllAsync(newBooks);
                 _logger.LogInformation("Carga terminada. Guardados: {Saved}, Saltados: {Skipped}", response.TotalSaved, response.TotalSkipped);
 
-                foreach (var book in newBooks)
+                var uploadedEvent = new BooksUploadedEvent
                 {
-                    var textParts = new List<string> { $"Título: {book.Title}" };
-                    
-                    if (!string.IsNullOrWhiteSpace(book.Isbn)) 
-                        textParts.Add($"ISBN: {book.Isbn}");
-                    if (!string.IsNullOrWhiteSpace(book.Classification)) 
-                        textParts.Add($"Clasificación: {book.Classification}");
-                    if (!string.IsNullOrWhiteSpace(book.Language)) 
-                        textParts.Add($"Idioma: {book.Language}");
-                    if (!string.IsNullOrWhiteSpace(book.Year)) 
-                        textParts.Add($"Año: {book.Year}");
-                    if (!string.IsNullOrWhiteSpace(book.Summary)) 
-                        textParts.Add($"Resumen: {book.Summary}");
-                    if (book.Authors.Any()) 
-                        textParts.Add($"Autores: {string.Join(", ", book.Authors.Select(a => a.Name))}");
-                    if (book.Topics.Any()) 
-                        textParts.Add($"Temas: {string.Join(", ", book.Topics.Select(t => t.Name))}");
-
-                    var text = string.Join(". ", textParts) + ".";
-
-                    loadedBooksDto.Add(new BookItemDTO 
-                    { 
-                        BookId = book.Id, 
-                        Text = text 
-                    });
-                }
+                    Books = savedBooks.Select(b => new BookUploadedItem
+                    {
+                        Id = b.Id,
+                        Description = b.ToString()
+                    }).ToList()
+                };
+                await _publisher.PublishAsync(uploadedEvent);
             }
             catch (Exception ex)
             {
@@ -180,7 +164,7 @@ public class UploadBooksService
             }
         }
 
-        return (response, loadedBooksDto);
+        return response;
     }
 
 

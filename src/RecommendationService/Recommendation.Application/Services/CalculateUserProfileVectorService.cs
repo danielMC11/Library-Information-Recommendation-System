@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Recommendation.Application.Events;
+using Shared.Events;
 using Recommendation.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ public class CalculateUserProfileVectorService
         _logger = logger;
     }
 
-    public async Task CalculateAndSaveProfileVectorAsync(UserProfileCalculationEvent @event)
+    public async Task CalculateAndSaveProfileVectorAsync(UserInteractionsAccumulatedEvent @event)
     {
         if (@event.BookIds == null || !@event.BookIds.Any())
         {

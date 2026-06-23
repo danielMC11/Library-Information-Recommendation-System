@@ -1,6 +1,8 @@
 ﻿using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
-using Microsoft.Extensions.Logging;
+using Shared.DTOs;
+using Shared.Enums;
+using Shared.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,16 +12,16 @@ public class BookService : IBookService
 {
 
     private readonly IBookRepository _repository;
+    private readonly IInteractionApiService _interactionApi;
 
-    public BookService(IBookRepository repository)
+    public BookService(IBookRepository repository, IInteractionApiService interactionApi)
     {
         _repository = repository;
+        _interactionApi = interactionApi;
     }
 
-    public async Task<BookDetailsDto?> GetBookDetailsAsync(Guid id)
+    public async Task<BookDto?> GetBookDetailsAsync(Guid id, Guid userId)
     {
-
-
         if (id == Guid.Empty)
             throw new ArgumentException("El Id del libro no es válido.", nameof(id));
 
@@ -28,30 +30,45 @@ public class BookService : IBookService
         if (book is null)
             return null;
 
+        await _interactionApi.SendUserInteractionAsync(new UserInteractionEvent
+        {
+            BookIds = new List<Guid> { book.Id },
+            UserId = userId,
+            InteractionType = InteractionType.VIEW.ToString()
+        });
+
         return MapToDto(book);
     }
 
-    public async Task<List<BookDetailsDto>> GetBooksPagedAsync(int page, int pageSize)
+    public async Task<List<BookDto>> GetBooksPagedAsync(int page, int pageSize)
     {
         var books = await _repository.GetBooksPagedAsync(page, pageSize);
         return books.Select(MapToDto).ToList();
     }
 
-    public async Task<List<BookDetailsDto>> SearchBooksAsync(string name)
+    public async Task<List<BookDto>> SearchBooksAsync(string name, Guid userId)
     {
         var books = await _repository.SearchBooksAsync(name);
+
+        await _interactionApi.SendUserInteractionAsync(new UserInteractionEvent
+        {
+            BookIds = books.Select(b => b.Id).ToList(),
+            UserId = userId,
+            InteractionType = InteractionType.SEARCH.ToString()
+        });
+
         return books.Select(MapToDto).ToList();
     }
 
-    public async Task<List<BookDetailsDto>> GetBooksByIdsAsync(List<Guid> ids)
+    public async Task<List<BookDto>> GetBooksByIdsAsync(List<Guid> ids)
     {
         var books = await _repository.GetBooksByIdsAsync(ids);
         return books.Select(MapToDto).ToList();
     }
 
-    private static BookDetailsDto MapToDto(Book book)
+    private static BookDto MapToDto(Book book)
     {
-        return new BookDetailsDto
+        return new BookDto
         {
             Id = book.Id,
             Isbn = book.Isbn,
@@ -64,5 +81,7 @@ public class BookService : IBookService
             Topics = book.Topics.Select(t => t.Name)
         };
     }
+
+
 
 }

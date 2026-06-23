@@ -42,5 +42,23 @@ public class Book
         return HashCode.Combine(Title?.Trim().ToLower(), Isbn);
     }
 
+    public override string ToString()
+    {
+        var textParts = new List<string> { $"Título: {Title}" };
+
+        if (!string.IsNullOrWhiteSpace(Isbn)) textParts.Add($"ISBN: {Isbn}");
+        if (!string.IsNullOrWhiteSpace(Classification)) textParts.Add($"Clasificación: {Classification}");
+        if (!string.IsNullOrWhiteSpace(Language)) textParts.Add($"Idioma: {Language}");
+        if (!string.IsNullOrWhiteSpace(Year)) textParts.Add($"Año: {Year}");
+        if (!string.IsNullOrWhiteSpace(Summary)) textParts.Add($"Resumen: {Summary}");
+
+        if (Authors != null && Authors.Any())
+            textParts.Add($"Autores: {string.Join(", ", Authors)}");
+
+        if (Topics != null && Topics.Any())
+            textParts.Add($"Temas: {string.Join(", ", Topics)}");
+
+        return string.Join(". ", textParts) + ".";
+    }
 
 }

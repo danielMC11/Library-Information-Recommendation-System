@@ -1,9 +1,13 @@
+using Shared.DTOs;
+using Catalog.Domain.Entities;
+
 namespace Catalog.Application.Interfaces;
+
 
 public interface IBookService
 {
-    Task<BookDetailsDto?> GetBookDetailsAsync(Guid id);
-    Task<List<BookDetailsDto>> GetBooksPagedAsync(int page, int pageSize);
-    Task<List<BookDetailsDto>> SearchBooksAsync(string name);
-    Task<List<BookDetailsDto>> GetBooksByIdsAsync(List<Guid> ids);
+    Task<BookDto?> GetBookDetailsAsync(Guid id, Guid userId);
+    Task<List<BookDto>> GetBooksPagedAsync(int page, int pageSize);
+    Task<List<BookDto>> SearchBooksAsync(string name, Guid userId);
+    Task<List<BookDto>> GetBooksByIdsAsync(List<Guid> ids);
 }

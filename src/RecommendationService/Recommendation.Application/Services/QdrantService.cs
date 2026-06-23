@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Recommendation.Application.Events;
 using Recommendation.Application.Interfaces;
 using System;
 using System.Collections.Generic;

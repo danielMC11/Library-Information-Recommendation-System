@@ -1,14 +1,16 @@
 using Catalog.Application.Interfaces;
 using Catalog.Application.Services;
+using Catalog.Domain.Entities;
+using Catalog.Infrastructure.HttpClients;
+using Catalog.Infrastructure.Messaging;
+using Catalog.Infrastructure.Messaging.Config;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Repositories;
-using Catalog.Api.Config;
-using Catalog.Api.Messaging;
-using Catalog.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Shared.Config;
 using System.Text;
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -80,8 +82,21 @@ builder.Services.Configure<RabbitMQSettings>(
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<UploadBooksService>();
-builder.Services.AddSingleton<CatalogUploadPublisher>();
-builder.Services.AddSingleton<BookInteractionPublisher>();
+builder.Services.AddSingleton<IBooksUploadedPublisher, BooksUploadedPublisher>();
+
+builder.Services.AddHostedService<RabbitMQConfig>();
+
+
+
+builder.Services.AddHttpClient<IInteractionApiService, InteractionApiService>(client =>
+{
+    // Configuramos la URL base (leyendo del appsettings.json o usando localhost por defecto)
+    client.BaseAddress = new Uri(builder.Configuration["InteractionApi:BaseUrl"] ?? "http://localhost:5144");
+
+    // Configuramos headers y timeouts
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 
 
