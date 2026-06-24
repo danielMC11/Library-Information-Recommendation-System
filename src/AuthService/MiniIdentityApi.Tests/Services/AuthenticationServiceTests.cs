@@ -1,5 +1,6 @@
 ﻿using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Services;
+using MiniIdentityApi.Domain.Entities;
 using MiniIdentityApi.Infrastructure.Repositories;
 using MiniIdentityApi.Infrastructure.Security;
 using MiniIdentityApi.Tests.TestDoubles;
@@ -29,7 +30,7 @@ public class AuthenticationServiceTests
         };
 
         // Act
-        service.Register(request);
+        service.Register(request, Role.User);
 
         // Assert
         var savedUser = userRepository.FindByUsernameOrEmail("wolfang");
@@ -38,6 +39,7 @@ public class AuthenticationServiceTests
         Assert.Equal("wolfang@example.com", savedUser.Email);
         Assert.Equal(1, savedUser.Career);
         Assert.Equal(3, savedUser.Semester);
+        Assert.Equal(Role.User, savedUser.Role);
     }
 
     [Fact]
@@ -59,10 +61,10 @@ public class AuthenticationServiceTests
             Semester = 3
         };
 
-        service.Register(request);
+        service.Register(request, Role.User);
 
         // Act + Assert
-        Assert.Throws<InvalidOperationException>(() => service.Register(request));
+        Assert.Throws<InvalidOperationException>(() => service.Register(request, Role.User));
     }
 
     [Fact]
@@ -82,7 +84,7 @@ public class AuthenticationServiceTests
             Password = "Pass123!",
             Career = 1,
             Semester = 3
-        });
+        }, Role.User);
 
         var loginRequest = new LoginRequest
         {
@@ -118,7 +120,7 @@ public class AuthenticationServiceTests
             Password = "Pass123!",
             Career = 1,
             Semester = 3
-        });
+        }, Role.User);
 
         var loginRequest = new LoginRequest
         {

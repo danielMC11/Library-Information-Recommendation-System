@@ -16,4 +16,8 @@
     <ProjectReference Include="..\MiniIdentityApi.Domain\MiniIdentityApi.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Persistence\" />
+  </ItemGroup>
+
 </Project>

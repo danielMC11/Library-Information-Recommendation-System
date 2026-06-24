@@ -23,10 +23,9 @@ public class JwtTokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new(JwtRegisteredClaimNames.Email, user.Email)
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
-
-        claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.Name)));
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

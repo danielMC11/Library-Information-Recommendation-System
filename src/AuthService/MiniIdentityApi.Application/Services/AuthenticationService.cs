@@ -1,7 +1,6 @@
 ﻿using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Interfaces;
 using MiniIdentityApi.Domain.Entities;
-using MiniIdentityApi.Domain.Enums;
 
 namespace MiniIdentityApi.Application.Services;
 
@@ -21,7 +20,7 @@ public class AuthenticationService
         _tokenService = tokenService;
     }
 
-    public void Register(RegisterRequest request)
+    public void Register(RegisterRequest request, Role role)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
             throw new ArgumentException("Username is required.");
@@ -48,7 +47,7 @@ public class AuthenticationService
         var hash = _passwordHasher.Hash(request.Password, salt);
 
         var credential = new Credential(hash, salt);
-        var user = new User(request.Username, request.Email, request.Career, request.Semester, credential);
+        var user = new User(request.Username, request.Email, request.Career, request.Semester, credential, role);
 
         _userRepository.Save(user);
     }
@@ -59,9 +58,6 @@ public class AuthenticationService
 
         if (user is null)
             throw new UnauthorizedAccessException("Invalid credentials.");
-
-        if (user.Status != UserStatus.Active)
-            throw new UnauthorizedAccessException("User is not active.");
 
         var isValid = _passwordHasher.Verify(
             request.Password,
@@ -79,7 +75,7 @@ public class AuthenticationService
             Email = user.Email,
             Career = user.Career,
             Semester = user.Semester,
-            Roles = user.Roles.Select(r => r.Name).ToList()
+            Roles = new List<string> { user.Role.ToString() }
         };
     }
 }

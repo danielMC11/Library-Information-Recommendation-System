@@ -32,42 +32,16 @@ public class UsersController : ControllerBase
         return user is null ? NotFound() : Ok(user);
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPatch("{id:guid}/activate")]
-    public IActionResult Activate(Guid id)
-    {
-        _userService.Activate(id);
-        return Ok(new { message = "User activated." });
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPatch("{id:guid}/deactivate")]
-    public IActionResult Deactivate(Guid id)
-    {
-        _userService.Deactivate(id);
-        return Ok(new { message = "User deactivated." });
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPost("{id:guid}/roles")]
-    public IActionResult AssignRole(Guid id, [FromBody] AssignRoleRequest request)
-    {
-        _userService.AssignRole(id, request.RoleName);
-        return Ok(new { message = "Role assigned." });
-    }
-
     [Authorize]
     [HttpPatch("{id:guid}/career-semester")]
     public IActionResult UpdateCareerAndSemester(Guid id, [FromBody] UpdateCareerAndSemesterRequest request)
     {
-        // Intenta obtener la claim "sub" de diferentes formas
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
-            ?? User.FindFirst("sub")?.Value 
+        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? User.FindFirst("sub")?.Value
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         var isAdmin = User.IsInRole("Admin");
 
-        // Si no es admin, verifica que sea el propietario
         if (!isAdmin)
         {
             if (string.IsNullOrEmpty(userIdClaim))
