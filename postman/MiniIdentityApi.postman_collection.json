@@ -2,13 +2,13 @@
   "info": {
     "_postman_id": "2d973509-3a84-4f53-b77a-e1a6d8478a41",
     "name": "MiniIdentity API",
-    "description": "Postman collection for the MiniIdentity API sample. Includes auth, users, roles, and demo endpoints.",
+    "description": "Postman collection for the MiniIdentity API sample. Includes auth and users endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://localhost:7132"
+      "value": "https://localhost:7260"
     },
     {
       "key": "jwt",
@@ -17,16 +17,39 @@
     {
       "key": "userId",
       "value": "00000000-0000-0000-0000-000000000000"
-    },
-    {
-      "key": "roleName",
-      "value": "Admin"
     }
   ],
   "item": [
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin2\",\n  \"email\": \"admin2@example.com\",\n  \"password\": \"Pass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/registerAdmin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "registerAdmin"]
+            },
+            "description": "Registers a new user with Admin role. Requires an existing Admin JWT token."
+          },
+          "response": []
+        },
         {
           "name": "Register User",
           "request": {
@@ -35,18 +58,22 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"wolfang\",\n  \"email\": \"wolfang@example.com\",\n  \"password\": \"Pass123!\"\n}"
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Pass123!\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/auth/register",
+              "raw": "{{baseUrl}}/api/auth/registerUser",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "register"]
+              "path": ["api", "auth", "registerUser"]
             },
-            "description": "Registers a new user in the in-memory repository."
+            "description": "Registers a new user with User role. Requires an existing Admin JWT token."
           },
           "response": []
         },
@@ -80,57 +107,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"usernameOrEmail\": \"wolfang\",\n  \"password\": \"Pass123!\"\n}"
+              "raw": "{\n  \"usernameOrEmail\": \"admin\",\n  \"password\": \"Admin123*\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
               "host": ["{{baseUrl}}"],
               "path": ["api", "auth", "login"]
             },
-            "description": "Validates credentials and stores the returned JWT in the collection variable named 'jwt'."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Demo",
-      "item": [
-        {
-          "name": "Profile (Authenticated)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/demo/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "demo", "profile"]
-            },
-            "description": "Requires a valid JWT. Any authenticated user can access this endpoint."
-          },
-          "response": []
-        },
-        {
-          "name": "Admin Demo (Admin only)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/demo/admin",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "demo", "admin"]
-            },
-            "description": "Requires a JWT for a user that has the Admin role."
+            "description": "Validates credentials and stores the returned JWT in the collection variable named 'jwt'. Default seeded admin: admin / Admin123*"
           },
           "response": []
         }
@@ -174,149 +158,6 @@
               "path": ["api", "users", "{{userId}}"]
             },
             "description": "Returns a single user by id. Requires authentication."
-          },
-          "response": []
-        },
-        {
-          "name": "Activate User (Admin)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}/activate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}", "activate"]
-            },
-            "description": "Activates the user identified by userId. Requires Admin role."
-          },
-          "response": []
-        },
-        {
-          "name": "Deactivate User (Admin)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}/deactivate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}", "deactivate"]
-            },
-            "description": "Deactivates the user identified by userId. Requires Admin role."
-          },
-          "response": []
-        },
-        {
-          "name": "Assign Role To User (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"roleName\": \"{{roleName}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/users/{{userId}}/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}", "roles"]
-            },
-            "description": "Assigns a role to a specific user. Requires Admin role."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Roles",
-      "item": [
-        {
-          "name": "Get All Roles (Admin)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "roles"]
-            },
-            "description": "Returns all roles. Requires Admin role."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Role (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Admin\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/roles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "roles"]
-            },
-            "description": "Creates a new role. Requires Admin role."
-          },
-          "response": []
-        },
-        {
-          "name": "Add Permission To Role (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{jwt}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"users.read\",\n  \"description\": \"Allows listing users\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/roles/{{roleName}}/permissions",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "roles", "{{roleName}}", "permissions"]
-            },
-            "description": "Adds a permission to a role. Requires Admin role."
           },
           "response": []
         }

@@ -107,7 +107,7 @@ public class UploadBooksService
             }
 
             // 2. LÓGICA DE DUPLICADOS
-            if (existingBooks.Any(b => b.Equals(currentBook)) || newBooks.Any(b => b.Equals(currentBook)))
+            if (existingBooks.Any(b => b.Equals(currentBook) || b.Title == currentBook.Title) || newBooks.Any(b => b.Equals(currentBook) || b.Title == currentBook.Title))
             {
                 _logger.LogInformation("Registro #{Index}: Saltado (Duplicado). Título: {Title}", currentRecordIndex, title);
                 skippedCount++;
@@ -152,7 +152,10 @@ public class UploadBooksService
                     Books = savedBooks.Select(b => new BookUploadedItem
                     {
                         Id = b.Id,
-                        Description = b.ToString()
+                        Description = b.ToString(),
+                        Isbn = b.Isbn,
+                        Year = b.Year,
+                        Language = b.Language
                     }).ToList()
                 };
                 await _publisher.PublishAsync(uploadedEvent);

@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Folder Include="Messaging\Config\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

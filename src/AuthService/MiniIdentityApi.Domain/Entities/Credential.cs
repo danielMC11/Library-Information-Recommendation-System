@@ -2,9 +2,11 @@
 
 public class Credential
 {
-    public string PasswordHash { get; private set; }
-    public string Salt { get; private set; }
+    public string PasswordHash { get; private set; } = null!;
+    public string Salt { get; private set; } = null!;
     public DateTime LastChangedAt { get; private set; }
+
+    private Credential() { }
 
     public Credential(string passwordHash, string salt)
     {

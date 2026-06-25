@@ -168,7 +168,6 @@ static async Task SeedCatalogDataAsync(AppDbContext dbContext)
     {
         Title = "Clean Code",
         Isbn = "9780132350884",
-        Classification = "Programming",
         Language = "English",
         Year = "2008",
         Summary = "A Handbook of Agile Software Craftsmanship."
@@ -180,7 +179,6 @@ static async Task SeedCatalogDataAsync(AppDbContext dbContext)
     {
         Title = "Domain-Driven Design",
         Isbn = "9780321125217",
-        Classification = "Programming",
         Language = "English",
         Year = "2003",
         Summary = "Tackling Complexity in the Heart of Software."

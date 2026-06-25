@@ -39,7 +39,10 @@ public class ProcessBooksBatchService
 
                 var metadata = new Dictionary<string, string>
                 {
-                    { "bookId", book.Id.ToString() }
+                    { "bookId", book.Id.ToString() },
+                    { "isbn", book.Isbn ?? "" },
+                    { "year", book.Year ?? "" },
+                    { "language", book.Language ?? "" }
                 };
 
                 records.Add(new BookVectorRecord(book.Id, vector, metadata));

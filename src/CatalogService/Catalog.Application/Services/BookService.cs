@@ -73,7 +73,7 @@ public class BookService : IBookService
             Id = book.Id,
             Isbn = book.Isbn,
             Title = book.Title,
-            Classification = book.Classification,
+
             Language = book.Language,
             Year = book.Year,
             Summary = book.Summary,

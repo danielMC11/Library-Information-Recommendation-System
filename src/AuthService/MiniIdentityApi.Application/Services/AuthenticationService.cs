@@ -31,12 +31,6 @@ public class AuthenticationService
         if (string.IsNullOrWhiteSpace(request.Password))
             throw new ArgumentException("Password is required.");
 
-        if (request.Career <= 0)
-            throw new ArgumentException("Career must be a positive integer.");
-
-        if (request.Semester <= 0)
-            throw new ArgumentException("Semester must be a positive integer.");
-
         var existing = _userRepository.FindByUsernameOrEmail(request.Username)
                       ?? _userRepository.FindByUsernameOrEmail(request.Email);
 
@@ -47,7 +41,7 @@ public class AuthenticationService
         var hash = _passwordHasher.Hash(request.Password, salt);
 
         var credential = new Credential(hash, salt);
-        var user = new User(request.Username, request.Email, request.Career, request.Semester, credential, role);
+        var user = new User(request.Username, request.Email, credential, role);
 
         _userRepository.Save(user);
     }
@@ -73,8 +67,6 @@ public class AuthenticationService
             AccessToken = _tokenService.GenerateToken(user),
             Username = user.Username,
             Email = user.Email,
-            Career = user.Career,
-            Semester = user.Semester,
             Roles = new List<string> { user.Role.ToString() }
         };
     }

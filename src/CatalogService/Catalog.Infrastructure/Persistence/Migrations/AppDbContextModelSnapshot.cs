@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Catalog.Infrastructure.Migrations
+namespace Catalog.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -37,7 +37,7 @@ namespace Catalog.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Authors");
+                    b.ToTable("Authors", (string)null);
                 });
 
             modelBuilder.Entity("AuthorBook", b =>
@@ -52,7 +52,7 @@ namespace Catalog.Infrastructure.Migrations
 
                     b.HasIndex("BooksId");
 
-                    b.ToTable("AuthorBook");
+                    b.ToTable("AuthorBook", (string)null);
                 });
 
             modelBuilder.Entity("BookTopic", b =>
@@ -67,7 +67,7 @@ namespace Catalog.Infrastructure.Migrations
 
                     b.HasIndex("TopicsId");
 
-                    b.ToTable("BookTopic");
+                    b.ToTable("BookTopic", (string)null);
                 });
 
             modelBuilder.Entity("Catalog.Domain.Entities.Book", b =>
@@ -75,9 +75,6 @@ namespace Catalog.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Classification")
-                        .HasColumnType("text");
 
                     b.Property<string>("Isbn")
                         .HasColumnType("text");
@@ -97,7 +94,7 @@ namespace Catalog.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Books");
+                    b.ToTable("Books", (string)null);
                 });
 
             modelBuilder.Entity("Catalog.Domain.Entities.Topic", b =>
@@ -115,7 +112,7 @@ namespace Catalog.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Topics");
+                    b.ToTable("Topics", (string)null);
                 });
 
             modelBuilder.Entity("AuthorBook", b =>
