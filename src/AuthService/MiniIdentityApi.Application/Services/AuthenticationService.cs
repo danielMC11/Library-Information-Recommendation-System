@@ -20,7 +20,7 @@ public class AuthenticationService
         _tokenService = tokenService;
     }
 
-    public void Register(RegisterRequest request, Role role)
+    public void RegisterAdmin(RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
             throw new ArgumentException("Username is required.");
@@ -41,7 +41,47 @@ public class AuthenticationService
         var hash = _passwordHasher.Hash(request.Password, salt);
 
         var credential = new Credential(hash, salt);
-        var user = new User(request.Username, request.Email, credential, role);
+        var user = new User(request.Username, request.Email, credential, Role.ADMIN);
+
+        _userRepository.Save(user);
+    }
+
+    public void RegisterStudent(RegisterStudentRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+            throw new ArgumentException("Username is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+            throw new ArgumentException("Email is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+            throw new ArgumentException("Password is required.");
+
+        var existing = _userRepository.FindByUsernameOrEmail(request.Username)
+                      ?? _userRepository.FindByUsernameOrEmail(request.Email);
+
+        if (existing is not null)
+            throw new InvalidOperationException("User already exists.");
+
+        var career = _userRepository.FindCareerById(request.CareerId)
+            ?? throw new ArgumentException($"Career with id {request.CareerId} not found.");
+
+        var subjects = _userRepository.FindSubjectsByIds(request.SubjectIds);
+        if (subjects.Count != request.SubjectIds.Count)
+            throw new ArgumentException("One or more subject ids are invalid.");
+
+        var salt = _passwordHasher.GenerateSalt();
+        var hash = _passwordHasher.Hash(request.Password, salt);
+
+        var credential = new Credential(hash, salt);
+        var user = new User(request.Username, request.Email, credential, Role.STUDENT);
+
+        var student = new Student(user, career, request.SemesterNumber);
+        foreach (var subject in subjects)
+        {
+            student.Subjects.Add(subject);
+        }
+        user.Student = student;
 
         _userRepository.Save(user);
     }

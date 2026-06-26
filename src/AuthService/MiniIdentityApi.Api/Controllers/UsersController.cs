@@ -16,7 +16,7 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "ADMIN")]
     [HttpGet]
     public IActionResult GetAll()
     {

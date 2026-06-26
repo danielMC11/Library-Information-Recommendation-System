@@ -58,6 +58,35 @@ public class RabbitMQConfig : IHostedService
 
             _logger.LogInformation("Interaction exchange '{Exchange}' declared successfully", _settings.Exchanges.Interaction);
 
+            await _channel.ExchangeDeclareAsync(
+                exchange: _settings.Exchanges.Auth,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Auth exchange '{Exchange}' declared successfully", _settings.Exchanges.Auth);
+
+            // StudentRegistered queue bind to auth exchange
+            await _channel.QueueDeclareAsync(
+                queue: _settings.Events.StudentRegistered.Queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            await _channel.QueueBindAsync(
+                queue: _settings.Events.StudentRegistered.Queue,
+                exchange: _settings.Exchanges.Auth,
+                routingKey: _settings.Events.StudentRegistered.RoutingKey,
+                arguments: null,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation("StudentRegistered queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
+                _settings.Events.StudentRegistered.Queue, _settings.Exchanges.Auth, _settings.Events.StudentRegistered.RoutingKey);
+
             // BooksUploaded queue bind to catalog exchange
             await _channel.QueueDeclareAsync(
                 queue: _settings.Events.BooksUploaded.Queue,
@@ -77,9 +106,9 @@ public class RabbitMQConfig : IHostedService
             _logger.LogInformation("BooksUploaded queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
                 _settings.Events.BooksUploaded.Queue, _settings.Exchanges.Catalog, _settings.Events.BooksUploaded.RoutingKey);
 
-            // UserInteractionsAccumulated queue bind to interaction exchange
+            // StudentInteractionsAccumulated queue bind to interaction exchange
             await _channel.QueueDeclareAsync(
-                queue: _settings.Events.UserInteractionsAccumulated.Queue,
+                queue: _settings.Events.StudentInteractionsAccumulated.Queue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
@@ -87,14 +116,14 @@ public class RabbitMQConfig : IHostedService
                 cancellationToken: cancellationToken);
 
             await _channel.QueueBindAsync(
-                queue: _settings.Events.UserInteractionsAccumulated.Queue,
+                queue: _settings.Events.StudentInteractionsAccumulated.Queue,
                 exchange: _settings.Exchanges.Interaction,
-                routingKey: _settings.Events.UserInteractionsAccumulated.RoutingKey,
+                routingKey: _settings.Events.StudentInteractionsAccumulated.RoutingKey,
                 arguments: null,
                 cancellationToken: cancellationToken);
 
-            _logger.LogInformation("UserInteractionsAccumulated queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
-                _settings.Events.UserInteractionsAccumulated.Queue, _settings.Exchanges.Interaction, _settings.Events.UserInteractionsAccumulated.RoutingKey);
+            _logger.LogInformation("StudentInteractionsAccumulated queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
+                _settings.Events.StudentInteractionsAccumulated.Queue, _settings.Exchanges.Interaction, _settings.Events.StudentInteractionsAccumulated.RoutingKey);
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniIdentityApi.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using MiniIdentityApi.Infrastructure.Persistence;
 namespace MiniIdentityApi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625195009_ChangeStudentIdToLong")]
+    partial class ChangeStudentIdToLong
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,8 +86,7 @@ namespace MiniIdentityApi.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CareerId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Students", (string)null);
                 });
@@ -176,8 +178,8 @@ namespace MiniIdentityApi.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("MiniIdentityApi.Domain.Entities.User", "User")
-                        .WithOne("Student")
-                        .HasForeignKey("MiniIdentityApi.Domain.Entities.Student", "UserId")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -211,7 +213,7 @@ namespace MiniIdentityApi.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("UserId");
 
-                            b1.ToTable("Users", (string)null);
+                            b1.ToTable("Users");
 
                             b1.WithOwner()
                                 .HasForeignKey("UserId");
@@ -234,11 +236,6 @@ namespace MiniIdentityApi.Infrastructure.Persistence.Migrations
                         .HasForeignKey("SubjectsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MiniIdentityApi.Domain.Entities.User", b =>
-                {
-                    b.Navigation("Student");
                 });
 #pragma warning restore 612, 618
         }

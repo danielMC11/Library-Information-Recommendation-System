@@ -1,11 +1,9 @@
-using System;
-
 namespace Interaction.Domain.Entities;
 
-public class UserFavorite
+public class StudentFavorite
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid UserId { get; set; }
+    public long StudentId { get; set; }
     public Guid BookId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

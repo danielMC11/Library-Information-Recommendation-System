@@ -61,6 +61,14 @@ public class AppDbContext : DbContext
             .HasConversion<string>();
 
         // =========================
+        // USER <-> STUDENT (one-to-one)
+        // =========================
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Student)
+            .WithOne(s => s.User)
+            .HasForeignKey<Student>("UserId");
+
+        // =========================
         // CAREER
         // =========================
         modelBuilder.Entity<Career>()

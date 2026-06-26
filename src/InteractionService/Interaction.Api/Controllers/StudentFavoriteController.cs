@@ -2,39 +2,41 @@ using Shared.DTOs;
 using Interaction.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Interaction.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserFavoriteController : ControllerBase
+public class StudentFavoriteController : ControllerBase
 {
-    private readonly UserFavoriteService _favoriteService;
+    private readonly StudentFavoriteService _favoriteService;
 
-    public UserFavoriteController(UserFavoriteService favoriteService)
+    public StudentFavoriteController(StudentFavoriteService favoriteService)
     {
         _favoriteService = favoriteService;
     }
 
+    private long GetStudentId()
+    {
+        var studentIdClaim = User.FindFirst("student_id")?.Value
+            ?? User.FindFirst("StudentId")?.Value;
+
+        return long.TryParse(studentIdClaim, out var id) ? id : 0;
+    }
+
     [Authorize]
     [HttpPost("save/{bookId:guid}")]
-    public async Task<ActionResult<UserFavoriteDto>> SaveFavorite([FromRoute] Guid bookId)
+    public async Task<ActionResult<StudentFavoriteDto>> SaveFavorite([FromRoute] Guid bookId)
     {
+        var studentId = GetStudentId();
 
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? User.FindFirst("sub")?.Value
-        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        if (studentId == 0)
             return Unauthorized("Token inválido.");
 
         try
         {
-            var result = await _favoriteService.SaveFavoriteAsync(userId, bookId);
+            var result = await _favoriteService.SaveFavoriteAsync(studentId, bookId);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -47,17 +49,14 @@ public class UserFavoriteController : ControllerBase
     [HttpGet("list")]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetFavorites()
     {
+        var studentId = GetStudentId();
 
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? User.FindFirst("sub")?.Value
-        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        if (studentId == 0)
             return Unauthorized("Token inválido.");
 
         try
         {
-            var books = await _favoriteService.GetUserFavoritesAsync(userId);
+            var books = await _favoriteService.GetStudentFavoritesAsync(studentId);
             return Ok(books);
         }
         catch (ArgumentException ex)
@@ -70,17 +69,14 @@ public class UserFavoriteController : ControllerBase
     [HttpGet("check/{bookId:guid}")]
     public async Task<ActionResult<bool>> CheckFavorite([FromRoute] Guid bookId)
     {
+        var studentId = GetStudentId();
 
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? User.FindFirst("sub")?.Value
-        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        if (studentId == 0)
             return Unauthorized("Token inválido.");
 
         try
         {
-            var result = await _favoriteService.CheckFavoriteAsync(userId, bookId);
+            var result = await _favoriteService.CheckFavoriteAsync(studentId, bookId);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -93,17 +89,14 @@ public class UserFavoriteController : ControllerBase
     [HttpDelete("delete/{bookId:guid}")]
     public async Task<IActionResult> DeleteFavorite([FromRoute] Guid bookId)
     {
+        var studentId = GetStudentId();
 
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-        ?? User.FindFirst("sub")?.Value
-        ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-        if (!Guid.TryParse(userIdClaim, out var userId))
+        if (studentId == 0)
             return Unauthorized("Token inválido.");
 
         try
         {
-            await _favoriteService.DeleteFavoriteAsync(userId, bookId);
+            await _favoriteService.DeleteFavoriteAsync(studentId, bookId);
             return NoContent();
         }
         catch (InvalidOperationException ex)

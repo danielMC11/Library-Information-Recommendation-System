@@ -7,10 +7,11 @@ public class User
     public string Email { get; private set; } = null!;
     public Credential Credential { get; private set; } = null!;
     public Role Role { get; private set; }
+    public Student? Student { get; set; }
 
     private User() { }
 
-    public User(string username, string email, Credential credential, Role role = Role.User)
+    public User(string username, string email, Credential credential, Role role = Role.STUDENT)
     {
         Username = username;
         Email = email;

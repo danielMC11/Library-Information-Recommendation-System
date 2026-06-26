@@ -8,4 +8,6 @@ public interface IUserRepository
     User? FindByUsernameOrEmail(string value);
     List<User> GetAll();
     void Save(User user);
+    Career? FindCareerById(int careerId);
+    List<Subject> FindSubjectsByIds(List<int> subjectIds);
 }

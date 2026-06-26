@@ -17,20 +17,19 @@ public class AuthController : ControllerBase
         _authenticationService = authenticationService;
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "ADMIN")]
     [HttpPost("registerAdmin")]
     public IActionResult RegisterAdmin([FromBody] RegisterRequest request)
     {
-        _authenticationService.Register(request, Role.Admin);
+        _authenticationService.RegisterAdmin(request);
         return StatusCode(StatusCodes.Status201Created, new { message = "Admin registered successfully." });
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPost("registerUser")]
-    public IActionResult RegisterUser([FromBody] RegisterRequest request)
+    [HttpPost("registerStudent")]
+    public IActionResult RegisterStudent([FromBody] RegisterStudentRequest request)
     {
-        _authenticationService.Register(request, Role.User);
-        return StatusCode(StatusCodes.Status201Created, new { message = "User registered successfully." });
+        _authenticationService.RegisterStudent(request);
+        return StatusCode(StatusCodes.Status201Created, new { message = "Student registered successfully." });
     }
 
     [HttpPost("login")]

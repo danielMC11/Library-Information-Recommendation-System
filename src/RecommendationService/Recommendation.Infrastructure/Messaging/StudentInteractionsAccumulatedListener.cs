@@ -15,17 +15,17 @@ using System.Threading.Tasks;
 
 namespace Recommendation.Infrastructure.Messaging;
 
-public class UserInteractionsAccumulatedListener : BackgroundService
+public class StudentInteractionsAccumulatedListener : BackgroundService
 {
     private readonly RabbitMQSettings _settings;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<UserInteractionsAccumulatedListener> _logger;
+    private readonly ILogger<StudentInteractionsAccumulatedListener> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public UserInteractionsAccumulatedListener(
+    public StudentInteractionsAccumulatedListener(
         IOptions<RabbitMQSettings> settings,
-        ILogger<UserInteractionsAccumulatedListener> logger,
+        ILogger<StudentInteractionsAccumulatedListener> logger,
         IServiceScopeFactory scopeFactory)
     {
         _settings = settings.Value;
@@ -58,7 +58,7 @@ public class UserInteractionsAccumulatedListener : BackgroundService
 
             try
             {
-                var @event = JsonSerializer.Deserialize<UserInteractionsAccumulatedEvent>(json, new JsonSerializerOptions
+                var @event = JsonSerializer.Deserialize<StudentInteractionsAccumulatedEvent>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -84,13 +84,13 @@ public class UserInteractionsAccumulatedListener : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing UserInteractionsAccumulatedEvent");
+                _logger.LogError(ex, "Error processing StudentInteractionsAccumulatedEvent");
                 await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
             }
         };
 
         await _channel.BasicConsumeAsync(
-            queue: _settings.Events.UserInteractionsAccumulated.Queue,
+            queue: _settings.Events.StudentInteractionsAccumulated.Queue,
             autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken

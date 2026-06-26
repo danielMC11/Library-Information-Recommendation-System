@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace Interaction.Infrastructure.Messaging;
 
-public class UserInteractionsAccumulatedPublisher : IUserInteractionsAccumulatedPublisher
+public class StudentInteractionsAccumulatedPublisher : IStudentInteractionsAccumulatedPublisher
 {
     private readonly RabbitMQSettings _settings;
-    private readonly ILogger<UserInteractionsAccumulatedPublisher> _logger;
+    private readonly ILogger<StudentInteractionsAccumulatedPublisher> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public UserInteractionsAccumulatedPublisher(IOptions<RabbitMQSettings> settings, ILogger<UserInteractionsAccumulatedPublisher> logger)
+    public StudentInteractionsAccumulatedPublisher(IOptions<RabbitMQSettings> settings, ILogger<StudentInteractionsAccumulatedPublisher> logger)
     {
         _settings = settings.Value;
         _logger = logger;
@@ -41,7 +41,7 @@ public class UserInteractionsAccumulatedPublisher : IUserInteractionsAccumulated
         _channel = await _connection.CreateChannelAsync();
     }
 
-    public async Task PublishAsync(UserInteractionsAccumulatedEvent @event)
+    public async Task PublishAsync(StudentInteractionsAccumulatedEvent @event)
     {
         try
         {
@@ -62,17 +62,17 @@ public class UserInteractionsAccumulatedPublisher : IUserInteractionsAccumulated
 
             await _channel.BasicPublishAsync(
                 exchange: _settings.Exchanges.Interaction,
-                routingKey: _settings.Events.UserInteractionsAccumulated.RoutingKey,
+                routingKey: _settings.Events.StudentInteractionsAccumulated.RoutingKey,
                 mandatory: true,
                 basicProperties: properties,
                 body: body);
 
-            _logger.LogInformation("UserInteractionsAccumulated for User {UserId} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
-                @event.UserId, _settings.Exchanges.Interaction, _settings.Events.UserInteractionsAccumulated.RoutingKey);
+            _logger.LogInformation("StudentInteractionsAccumulated for User {UserId} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
+                @event.StudentId, _settings.Exchanges.Interaction, _settings.Events.StudentInteractionsAccumulated.RoutingKey);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al publicar UserInteractionsAccumulatedEvent en RabbitMQ");
+            _logger.LogError(ex, "Error al publicar StudentInteractionsAccumulatedEvent en RabbitMQ");
             throw;
         }
     }

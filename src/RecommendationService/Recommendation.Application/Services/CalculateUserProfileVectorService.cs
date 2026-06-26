@@ -19,11 +19,11 @@ public class CalculateUserProfileVectorService
         _logger = logger;
     }
 
-    public async Task CalculateAndSaveProfileVectorAsync(UserInteractionsAccumulatedEvent @event)
+    public async Task CalculateAndSaveProfileVectorAsync(StudentInteractionsAccumulatedEvent @event)
     {
         if (@event.BookIds == null || !@event.BookIds.Any())
         {
-            _logger.LogWarning("No book IDs provided for user profile calculation. UserId: {UserId}", @event.UserId);
+            _logger.LogWarning("No book IDs provided for user profile calculation. UserId: {UserId}", @event.StudentId);
             return;
         }
 
@@ -32,7 +32,7 @@ public class CalculateUserProfileVectorService
 
         if (!bookVectors.Any())
         {
-            _logger.LogWarning("No vectors found for the provided book IDs. UserId: {UserId}", @event.UserId);
+            _logger.LogWarning("No vectors found for the provided book IDs. UserId: {UserId}", @event.StudentId);
             return;
         }
 
@@ -53,7 +53,7 @@ public class CalculateUserProfileVectorService
             averageVector[i] /= bookVectors.Count;
         }
 
-        _logger.LogInformation("Successfully calculated User Profile Vector for UserId: {UserId}. Vector Size: {Size}", @event.UserId, vectorSize);
+        _logger.LogInformation("Successfully calculated User Profile Vector for UserId: {UserId}. Vector Size: {Size}", @event.StudentId, vectorSize);
 
         // TODO: Save the user profile vector to Qdrant or Database based on further requirements.
         // For now, we log the success.

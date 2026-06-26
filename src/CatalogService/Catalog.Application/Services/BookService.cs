@@ -20,7 +20,7 @@ public class BookService : IBookService
         _interactionApi = interactionApi;
     }
 
-    public async Task<BookDto?> GetBookDetailsAsync(Guid id, Guid userId)
+    public async Task<BookDto?> GetBookDetailsAsync(Guid id, long studentId)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("El Id del libro no es válido.", nameof(id));
@@ -30,10 +30,10 @@ public class BookService : IBookService
         if (book is null)
             return null;
 
-        await _interactionApi.SendUserInteractionAsync(new UserInteractionEvent
+        await _interactionApi.SendStudentInteractionAsync(new StudentInteractionEvent
         {
             BookIds = new List<Guid> { book.Id },
-            UserId = userId,
+            StudentId = studentId,
             InteractionType = InteractionType.VIEW.ToString()
         });
 
@@ -46,14 +46,14 @@ public class BookService : IBookService
         return books.Select(MapToDto).ToList();
     }
 
-    public async Task<List<BookDto>> SearchBooksAsync(string name, Guid userId)
+    public async Task<List<BookDto>> SearchBooksAsync(string name, long studentId)
     {
         var books = await _repository.SearchBooksAsync(name);
 
-        await _interactionApi.SendUserInteractionAsync(new UserInteractionEvent
+        await _interactionApi.SendStudentInteractionAsync(new StudentInteractionEvent
         {
             BookIds = books.Select(b => b.Id).ToList(),
-            UserId = userId,
+            StudentId = studentId,
             InteractionType = InteractionType.SEARCH.ToString()
         });
 

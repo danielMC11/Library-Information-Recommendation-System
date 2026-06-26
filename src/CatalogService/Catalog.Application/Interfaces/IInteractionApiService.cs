@@ -4,5 +4,5 @@ namespace Catalog.Application.Interfaces;
 
 public interface IInteractionApiService
 {
-    Task SendUserInteractionAsync(UserInteractionEvent interactionEvent);
+    Task SendStudentInteractionAsync(StudentInteractionEvent interactionEvent);
 }

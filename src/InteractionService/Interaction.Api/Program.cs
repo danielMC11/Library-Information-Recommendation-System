@@ -76,8 +76,8 @@ builder.Services.Configure<RabbitMQSettings>(
     builder.Configuration.GetSection(RabbitMQSettings.SectionName)
 );
 
-builder.Services.AddScoped<IUserFavoriteRepository, Interaction.Infrastructure.Repositories.UserFavoriteRepository>();
-builder.Services.AddScoped<UserFavoriteService>();
+builder.Services.AddScoped<IStudentFavoriteRepository, Interaction.Infrastructure.Repositories.StudentFavoriteRepository>();
+builder.Services.AddScoped<StudentFavoriteService>();
 
 
 builder.Services.AddHttpClient<ICatalogApiService, CatalogApiService>(client =>
@@ -93,10 +93,10 @@ builder.Services.AddHttpClient<ICatalogApiService, CatalogApiService>(client =>
 
 
 
-builder.Services.AddScoped<IUserInteractionRepository, Interaction.Infrastructure.Repositories.UserInteractionRepository>();
-builder.Services.AddScoped<UserInteractionService>();
+builder.Services.AddScoped<IStudentInteractionRepository, Interaction.Infrastructure.Repositories.StudentInteractionRepository>();
+builder.Services.AddScoped<StudentInteractionService>();
 
-builder.Services.AddSingleton<IUserInteractionsAccumulatedPublisher, UserInteractionsAccumulatedPublisher>();
+builder.Services.AddSingleton<IStudentInteractionsAccumulatedPublisher, StudentInteractionsAccumulatedPublisher>();
 
 builder.Services.AddHostedService<RabbitMQConfig>();
 

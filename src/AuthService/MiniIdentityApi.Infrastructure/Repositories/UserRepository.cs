@@ -26,4 +26,10 @@ public class UserRepository : IUserRepository
         _db.Users.Add(user);
         _db.SaveChanges();
     }
+
+    public Career? FindCareerById(int careerId) =>
+        _db.Careers.FirstOrDefault(c => c.Id == careerId);
+
+    public List<Subject> FindSubjectsByIds(List<int> subjectIds) =>
+        _db.Subjects.Where(s => subjectIds.Contains(s.Id)).ToList();
 }

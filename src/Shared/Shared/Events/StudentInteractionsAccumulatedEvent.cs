@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Shared.Events;
 
-public class UserInteractionsAccumulatedEvent
+public class StudentInteractionsAccumulatedEvent
 {
-    public Guid UserId { get; set; }
+    public long StudentId { get; set; }
     public List<Guid> BookIds { get; set; } = new List<Guid>();
 }

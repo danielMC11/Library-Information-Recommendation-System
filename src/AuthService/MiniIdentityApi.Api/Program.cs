@@ -61,7 +61,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddSingleton<IPasswordHasher, Sha256PasswordHasher>();
-builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<UserService>();
@@ -106,8 +106,11 @@ using (var scope = app.Services.CreateScope())
 // -------------------- SEED DATA --------------------
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+    await CareerSeedData.SeedAsync(dbContext);
 
     var adminUser = userRepository.FindByUsernameOrEmail("admin");
     if (adminUser is null)
@@ -116,7 +119,7 @@ using (var scope = app.Services.CreateScope())
         var hash = passwordHasher.Hash("Admin123*", salt);
 
         var credential = new Credential(hash, salt);
-        adminUser = new User("admin", "admin@example.com", credential, Role.Admin);
+        adminUser = new User("admin", "admin@example.com", credential, Role.ADMIN);
 
         userRepository.Save(adminUser);
     }

@@ -3,6 +3,7 @@ using System;
 using Interaction.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Interaction.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625203938_ChangeUserIdToStudentId")]
+    partial class ChangeUserIdToStudentId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,7 +53,7 @@ namespace Interaction.Infrastructure.Persistence.Migrations
                     b.ToTable("InteractionEvents", (string)null);
                 });
 
-            modelBuilder.Entity("Interaction.Domain.Entities.StudentFavorite", b =>
+            modelBuilder.Entity("Interaction.Domain.Entities.UserFavorite", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,15 +65,15 @@ namespace Interaction.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("StudentId")
-                        .HasColumnType("bigint");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentId", "BookId")
+                    b.HasIndex("UserId", "BookId")
                         .IsUnique();
 
-                    b.ToTable("StudentFavorites", (string)null);
+                    b.ToTable("UserFavorites", (string)null);
                 });
 #pragma warning restore 612, 618
         }

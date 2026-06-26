@@ -35,7 +35,7 @@ builder.Services.AddScoped<CalculateUserProfileVectorService>();
 builder.Services.AddHostedService<RabbitMQConfig>();
 // Listener: se registra después para que el binding ya exista
 builder.Services.AddHostedService<BooksUploadedListener>();
-builder.Services.AddHostedService<UserInteractionsAccumulatedListener>();
+builder.Services.AddHostedService<StudentInteractionsAccumulatedListener>();
 
 var app = builder.Build();
 

@@ -17,13 +17,12 @@ public class BooksController : ControllerBase
         _bookService = bookService;
     }
 
-    private Guid GetUserId()
+    private long GetStudentId()
     {
-        var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-            ?? User.FindFirst("sub")?.Value
-            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var studentIdClaim = User.FindFirst("student_id")?.Value
+            ?? User.FindFirst("StudentId")?.Value;
 
-        return Guid.Parse(userIdClaim!);
+        return long.TryParse(studentIdClaim, out var id) ? id : 0;
     }
 
     [HttpGet]
@@ -41,8 +40,8 @@ public class BooksController : ControllerBase
         if (string.IsNullOrWhiteSpace(name))
             return BadRequest("El término de búsqueda no puede estar vacío.");
 
-        var userId = GetUserId();
-        var books = await _bookService.SearchBooksAsync(name, userId);
+        var studentId = GetStudentId();
+        var books = await _bookService.SearchBooksAsync(name, studentId);
 
         return Ok(books);
     }
@@ -54,8 +53,8 @@ public class BooksController : ControllerBase
         if (id == Guid.Empty)
             return BadRequest("El Id proporcionado no es válido.");
 
-        var userId = GetUserId();
-        var book = await _bookService.GetBookDetailsAsync(id, userId);
+        var studentId = GetStudentId();
+        var book = await _bookService.GetBookDetailsAsync(id, studentId);
 
         if (book is null)
             return NotFound($"No se encontró el libro con Id: {id}");

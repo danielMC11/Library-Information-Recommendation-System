@@ -5,12 +5,12 @@ namespace MiniIdentityApi.Domain.Entities;
 
 public class Student
 {
-    public int Id { get; private set; }
+    public long Id { get; private set; }
     public int SemesterNumber { get; private set; }
 
     public User User { get; private set; } = null!;
     public Career Career { get; private set; } = null!;
-    public ICollection<Subject> Subjects { get; private set; } = new List<Subject>();
+    public ICollection<Subject> Subjects { get; private set; } = new List<Subject>();   
 
     private Student() { }
 

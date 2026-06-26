@@ -10,7 +10,7 @@ public class AppDbContext : DbContext
     {
     }
 
-    public DbSet<UserFavorite> UserFavorites { get; set; }
+    public DbSet<StudentFavorite> StudentFavorites { get; set; }
     public DbSet<InteractionEvent> InteractionEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -20,8 +20,8 @@ public class AppDbContext : DbContext
         // =========================
         // TABLE MAPPINGS
         // =========================
-        modelBuilder.Entity<UserFavorite>()
-            .ToTable("UserFavorites");
+        modelBuilder.Entity<StudentFavorite>()
+            .ToTable("StudentFavorites");
 
         modelBuilder.Entity<InteractionEvent>()
             .ToTable("InteractionEvents");
@@ -31,8 +31,8 @@ public class AppDbContext : DbContext
         // =========================
         
         // A user can only favorite a book once
-        modelBuilder.Entity<UserFavorite>()
-            .HasIndex(uf => new { uf.UserId, uf.BookId })
+        modelBuilder.Entity<StudentFavorite>()
+            .HasIndex(sf => new { sf.StudentId, sf.BookId })
             .IsUnique();
 
         // Save enum as string in DB
@@ -40,9 +40,9 @@ public class AppDbContext : DbContext
             .Property(ie => ie.Type)
             .HasConversion<string>();
 
-        // Index for faster queries on user history
+        // Index for faster queries on student history
         modelBuilder.Entity<InteractionEvent>()
-            .HasIndex(ie => ie.UserId);
+            .HasIndex(ie => ie.StudentId);
 
         modelBuilder.Entity<InteractionEvent>()
             .HasIndex(ie => ie.BookId);

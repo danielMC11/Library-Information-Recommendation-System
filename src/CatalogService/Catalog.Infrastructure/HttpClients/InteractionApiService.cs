@@ -16,9 +16,9 @@ public class InteractionApiService : IInteractionApiService
         _httpClient = httpClient;
     }
 
-    public async Task SendUserInteractionAsync(UserInteractionEvent interactionEvent)
+    public async Task SendStudentInteractionAsync(StudentInteractionEvent interactionEvent)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/UserInteractions", interactionEvent);
+        var response = await _httpClient.PostAsJsonAsync("api/StudentInteractions", interactionEvent);
         response.EnsureSuccessStatusCode();
     }
 }
