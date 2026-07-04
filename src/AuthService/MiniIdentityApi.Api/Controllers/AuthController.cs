@@ -1,6 +1,8 @@
-﻿ using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Services;
+using MiniIdentityApi.Domain.Entities;
 
 namespace MiniIdentityApi.Api.Controllers;
 
@@ -15,11 +17,19 @@ public class AuthController : ControllerBase
         _authenticationService = authenticationService;
     }
 
-    [HttpPost("register")]
-    public IActionResult Register([FromBody] RegisterRequest request)
+    [Authorize(Roles = "ADMIN")]
+    [HttpPost("registerAdmin")]
+    public IActionResult RegisterAdmin([FromBody] RegisterRequest request)
     {
-        _authenticationService.Register(request);
-        return StatusCode(StatusCodes.Status201Created, new { message = "User registered successfully." });
+        _authenticationService.RegisterAdmin(request);
+        return StatusCode(StatusCodes.Status201Created, new { message = "Admin registered successfully." });
+    }
+
+    [HttpPost("registerStudent")]
+    public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentRequest request)
+    {
+        await _authenticationService.RegisterStudent(request);
+        return StatusCode(StatusCodes.Status201Created, new { message = "Student registered successfully." });
     }
 
     [HttpPost("login")]

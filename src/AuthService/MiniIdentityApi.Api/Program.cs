@@ -1,11 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using MiniIdentityApi.Application.Interfaces;
 using MiniIdentityApi.Application.Services;
 using MiniIdentityApi.Domain.Entities;
+using MiniIdentityApi.Infrastructure.Messaging;
+using MiniIdentityApi.Infrastructure.Persistence;
 using MiniIdentityApi.Infrastructure.Repositories;
 using MiniIdentityApi.Infrastructure.Security;
+using Shared.Config;
 using System.Text;
 
 
@@ -28,6 +32,14 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+var connectionString = builder.Configuration.GetConnectionString("AuthDb")
+    ?? throw new InvalidOperationException("Connection string 'AuthDb' not found.");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySQL(connectionString, b => b.MigrationsAssembly("MiniIdentityApi.Infrastructure")));
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -53,15 +65,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-builder.Services.AddSingleton<IRoleRepository, InMemoryRoleRepository>();
 builder.Services.AddSingleton<IPasswordHasher, Sha256PasswordHasher>();
-builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddScoped<AuthenticationService>();
-builder.Services.AddScoped<AuthorizationService>();
 builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<RoleService>();
+
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName));
+builder.Services.AddSingleton<IStudentRegisteredPublisher, StudentRegisteredPublisher>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing in configuration.");
@@ -93,33 +105,33 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-var userRepository = app.Services.GetRequiredService<IUserRepository>();
-var roleRepository = app.Services.GetRequiredService<IRoleRepository>();
-var passwordHasher = app.Services.GetRequiredService<IPasswordHasher>();
-
-var adminRole = roleRepository.FindByName("Admin");
-if (adminRole is null)
+// -------------------- DATABASE MIGRATION --------------------
+using (var scope = app.Services.CreateScope())
 {
-    adminRole = new Role("Admin");
-    adminRole.AddPermission(new Permission("users.read", "Can read users"));
-    adminRole.AddPermission(new Permission("users.manage", "Can manage users"));
-    adminRole.AddPermission(new Permission("roles.read", "Can read roles"));
-    adminRole.AddPermission(new Permission("roles.manage", "Can manage roles"));
-
-    roleRepository.Save(adminRole);
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
 }
 
-var adminUser = userRepository.FindByUsernameOrEmail("admin");
-if (adminUser is null)
+// -------------------- SEED DATA --------------------
+using (var scope = app.Services.CreateScope())
 {
-    var salt = passwordHasher.GenerateSalt();
-    var hash = passwordHasher.Hash("Admin123*", salt);
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
-    var credential = new Credential(hash, salt);
-    adminUser = new User("admin", "admin@example.com", 1, 1, credential);
-    adminUser.AddRole(adminRole);
+    await CareerSeedData.SeedAsync(dbContext);
 
-    userRepository.Save(adminUser);
+    var adminUser = userRepository.FindByUsernameOrEmail("admin");
+    if (adminUser is null)
+    {
+        var salt = passwordHasher.GenerateSalt();
+        var hash = passwordHasher.Hash("Admin123*", salt);
+
+        var credential = new Credential(hash, salt);
+        adminUser = new User("admin", "admin@example.com", credential, Role.ADMIN);
+
+        userRepository.Save(adminUser);
+    }
 }
 
 if (app.Environment.IsDevelopment())
@@ -135,4 +147,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

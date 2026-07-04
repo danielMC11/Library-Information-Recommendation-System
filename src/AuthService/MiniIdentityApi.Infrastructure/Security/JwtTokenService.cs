@@ -1,4 +1,6 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.EntityFrameworkCore;
+using MiniIdentityApi.Infrastructure.Persistence;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -11,10 +13,12 @@ namespace MiniIdentityApi.Infrastructure.Security;
 public class JwtTokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly AppDbContext _db;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenService(IConfiguration configuration, AppDbContext db)
     {
         _configuration = configuration;
+        _db = db;
     }
 
     public string GenerateToken(User user)
@@ -23,10 +27,13 @@ public class JwtTokenService : ITokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new(JwtRegisteredClaimNames.Email, user.Email)
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
-        claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.Name)));
+        var student = _db.Students.AsNoTracking().FirstOrDefault(s => s.User.Id == user.Id);
+        if (student is not null)
+            claims.Add(new("student_id", student.Id.ToString()));
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));

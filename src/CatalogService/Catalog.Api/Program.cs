@@ -1,14 +1,16 @@
 using Catalog.Application.Interfaces;
 using Catalog.Application.Services;
+using Catalog.Domain.Entities;
+using Catalog.Infrastructure.HttpClients;
+using Catalog.Infrastructure.Messaging;
+using Catalog.Infrastructure.Messaging.Config;
 using Catalog.Infrastructure.Persistence;
 using Catalog.Infrastructure.Repositories;
-using Catalog.Api.Config;
-using Catalog.Api.Messaging;
-using Catalog.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Shared.Config;
 using System.Text;
 
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -78,10 +80,23 @@ builder.Services.Configure<RabbitMQSettings>(
 
 
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<UploadBooksService>();
-builder.Services.AddScoped<BookService>();
-builder.Services.AddSingleton<CatalogUploadPublisher>();
-builder.Services.AddSingleton<BookInteractionPublisher>();
+builder.Services.AddSingleton<IBookUploadedPublisher, BookUploadedPublisher>();
+
+builder.Services.AddHostedService<RabbitMQConfig>();
+
+
+
+builder.Services.AddHttpClient<IInteractionApiService, InteractionApiService>(client =>
+{
+    // Configuramos la URL base (leyendo del appsettings.json o usando localhost por defecto)
+    client.BaseAddress = new Uri(builder.Configuration["InteractionApi:BaseUrl"] ?? "http://localhost:5144");
+
+    // Configuramos headers y timeouts
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 
 
@@ -143,36 +158,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
-
-static async Task SeedCatalogDataAsync(AppDbContext dbContext)
-{
-    if (await dbContext.Books.AnyAsync())
-        return;
-
-    var book1 = new Book
-    {
-        Title = "Clean Code",
-        Isbn = "9780132350884",
-        Classification = "Programming",
-        Language = "English",
-        Year = "2008",
-        Summary = "A Handbook of Agile Software Craftsmanship."
-    };
-    book1.Authors.Add(new Author { Name = "Robert C. Martin" });
-    book1.Topics.Add(new Topic { Name = "Software Engineering" });
-
-    var book2 = new Book
-    {
-        Title = "Domain-Driven Design",
-        Isbn = "9780321125217",
-        Classification = "Programming",
-        Language = "English",
-        Year = "2003",
-        Summary = "Tackling Complexity in the Heart of Software."
-    };
-    book2.Authors.Add(new Author { Name = "Eric Evans" });
-    book2.Topics.Add(new Topic { Name = "Domain Modeling" });
-
-    dbContext.Books.AddRange(book1, book2);
-    await dbContext.SaveChangesAsync();
-}

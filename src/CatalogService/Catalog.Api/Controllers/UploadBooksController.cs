@@ -1,9 +1,8 @@
-using Catalog.Application.DTOs;
+using Shared.DTOs;
 using Catalog.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Catalog.Api.Messaging;
-using Catalog.Application.Events;
+
 
 namespace Catalog.Api.Controllers;
 
@@ -13,12 +12,10 @@ namespace Catalog.Api.Controllers;
 public class UploadBooksController : ControllerBase
 {
     private readonly UploadBooksService _uploadService;
-    private readonly CatalogUploadPublisher _publisher;
 
-    public UploadBooksController(UploadBooksService uploadService, CatalogUploadPublisher publisher)
+    public UploadBooksController(UploadBooksService uploadService)
     {
         _uploadService = uploadService;
-        _publisher = publisher;
     }
 
     [HttpPost("upload")]
@@ -30,17 +27,7 @@ public class UploadBooksController : ControllerBase
         using var stream = new MemoryStream();
         await file.CopyToAsync(stream);
 
-        var (metrics, loadedBooks) = await _uploadService.ProcessIso2709Async(stream.ToArray());
-
-        if (loadedBooks.Any())
-        {
-            var newBookEvent = new NewBookBatchEvent
-            {
-                Books = loadedBooks
-            };
-
-            await _publisher.PublishNewBookBatchAsync(newBookEvent);
-        }
+        var metrics = await _uploadService.ProcessIso2709Async(stream.ToArray());
 
         return Ok(metrics);
     }

@@ -1,7 +1,7 @@
 ﻿using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Interfaces;
 using MiniIdentityApi.Domain.Entities;
-using MiniIdentityApi.Domain.Enums;
+using Shared.Events;
 
 namespace MiniIdentityApi.Application.Services;
 
@@ -10,18 +10,21 @@ public class AuthenticationService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
+    private readonly IStudentRegisteredPublisher _studentRegisteredPublisher;
 
     public AuthenticationService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IStudentRegisteredPublisher studentRegisteredPublisher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _studentRegisteredPublisher = studentRegisteredPublisher;
     }
 
-    public void Register(RegisterRequest request)
+    public void RegisterAdmin(RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
             throw new ArgumentException("Username is required.");
@@ -31,12 +34,6 @@ public class AuthenticationService
 
         if (string.IsNullOrWhiteSpace(request.Password))
             throw new ArgumentException("Password is required.");
-
-        if (request.Career <= 0)
-            throw new ArgumentException("Career must be a positive integer.");
-
-        if (request.Semester <= 0)
-            throw new ArgumentException("Semester must be a positive integer.");
 
         var existing = _userRepository.FindByUsernameOrEmail(request.Username)
                       ?? _userRepository.FindByUsernameOrEmail(request.Email);
@@ -48,9 +45,56 @@ public class AuthenticationService
         var hash = _passwordHasher.Hash(request.Password, salt);
 
         var credential = new Credential(hash, salt);
-        var user = new User(request.Username, request.Email, request.Career, request.Semester, credential);
+        var user = new User(request.Username, request.Email, credential, Role.ADMIN);
 
         _userRepository.Save(user);
+    }
+
+    public async Task RegisterStudent(RegisterStudentRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+            throw new ArgumentException("Username is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+            throw new ArgumentException("Email is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+            throw new ArgumentException("Password is required.");
+
+        var existing = _userRepository.FindByUsernameOrEmail(request.Username)
+                      ?? _userRepository.FindByUsernameOrEmail(request.Email);
+
+        if (existing is not null)
+            throw new InvalidOperationException("User already exists.");
+
+        var career = _userRepository.FindCareerById(request.CareerId)
+            ?? throw new ArgumentException($"Career with id {request.CareerId} not found.");
+
+        var subjects = _userRepository.FindSubjectsByIds(request.SubjectIds);
+        if (subjects.Count != request.SubjectIds.Count)
+            throw new ArgumentException("One or more subject ids are invalid.");
+
+        var salt = _passwordHasher.GenerateSalt();
+        var hash = _passwordHasher.Hash(request.Password, salt);
+
+        var credential = new Credential(hash, salt);
+        var user = new User(request.Username, request.Email, credential, Role.STUDENT);
+
+        var student = new Student(user, career, request.SemesterNumber);
+        foreach (var subject in subjects)
+        {
+            student.Subjects.Add(subject);
+        }
+        user.Student = student;
+
+        _userRepository.Save(user);
+
+        var @event = new StudentRegisteredEvent
+        {
+            StudentId = student.Id,
+            Description = student.ToString()
+        };
+        await _studentRegisteredPublisher.PublishAsync(@event);
     }
 
     public AuthResponse Login(LoginRequest request)
@@ -59,9 +103,6 @@ public class AuthenticationService
 
         if (user is null)
             throw new UnauthorizedAccessException("Invalid credentials.");
-
-        if (user.Status != UserStatus.Active)
-            throw new UnauthorizedAccessException("User is not active.");
 
         var isValid = _passwordHasher.Verify(
             request.Password,
@@ -77,9 +118,7 @@ public class AuthenticationService
             AccessToken = _tokenService.GenerateToken(user),
             Username = user.Username,
             Email = user.Email,
-            Career = user.Career,
-            Semester = user.Semester,
-            Roles = user.Roles.Select(r => r.Name).ToList()
+            Roles = new List<string> { user.Role.ToString() }
         };
     }
 }
