@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Recommendation.Api.Controller;
+namespace Recommendation.Api.Controllers;
 
 public class TextoRequest
 {
@@ -30,10 +30,8 @@ public class TestEmbeddingsController : ControllerBase
 
         try
         {
-            // Llamamos a tu método para un solo texto
             var vector = await _embeddingService.GenerateEmbeddingAsync(peticion.Texto);
 
-            // Devolvemos un JSON estructurado para que sea fácil de leer en la respuesta
             return Ok(new
             {
                 DimensionesPorVector = vector.Length,
@@ -42,8 +40,8 @@ public class TestEmbeddingsController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Capturamos cualquier error (como una API key inválida)
             return StatusCode(500, new { mensaje = "Ocurrió un error al generar el vector.", error = ex.Message });
         }
     }
+
 }

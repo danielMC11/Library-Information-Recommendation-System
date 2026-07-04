@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -10,23 +10,20 @@ using Recommendation.Application.Services;
 using System.Text;
 using System.Text.Json;
 
+namespace Recommendation.Infrastructure.Messaging;
 
-namespace Recommendation.Api.Messaging;
-
-public class BooksUploadedListener : BackgroundService
+public class StudentRegisteredListener : BackgroundService
 {
     private readonly RabbitMQSettings _settings;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<BooksUploadedListener> _logger;
+    private readonly ILogger<StudentRegisteredListener> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-
-    public BooksUploadedListener(
+    public StudentRegisteredListener(
         IOptions<RabbitMQSettings> settings,
-        ILogger<BooksUploadedListener> logger,
-        IServiceScopeFactory scopeFactory
-        )
+        ILogger<StudentRegisteredListener> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _settings = settings.Value;
         _logger = logger;
@@ -44,10 +41,10 @@ public class BooksUploadedListener : BackgroundService
             VirtualHost = _settings.VirtualHost
         };
 
-        _connection = await factory.CreateConnectionAsync();
-        _channel = await _connection.CreateChannelAsync();
+        _connection = await factory.CreateConnectionAsync(stoppingToken);
+        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
-        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
+        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -56,44 +53,47 @@ public class BooksUploadedListener : BackgroundService
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
 
+            StudentRegisteredEvent? @event = null;
+
             try
             {
-                var @event = JsonSerializer.Deserialize<BooksUploadedEvent>(json, new JsonSerializerOptions
+                @event = JsonSerializer.Deserialize<StudentRegisteredEvent>(json, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
 
-                if (@event is null)
+                if (@event == null)
                 {
-                    _logger.LogWarning("Evento deserializado es null. Body: {Json}", json);
-                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                    _logger.LogWarning("Deserialized event is null. Body: {Json}", json);
+                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
                     return;
                 }
 
-                _logger.LogInformation("Recibido BooksUploadedEvent con {Count} libros", @event.Books.Count);
+                _logger.LogInformation("Recibido StudentRegisteredEvent para StudentId: {StudentId}", @event.StudentId);
 
                 using var scope = _scopeFactory.CreateScope();
-                var processService = scope.ServiceProvider.GetRequiredService<ProcessBooksBatchService>();
-                await processService.ProcessEmbeddingsAsync(@event);
+                var profileService = scope.ServiceProvider.GetRequiredService<StudentProfileVectorService>();
+                await profileService.CalculateInitialProfileVector(@event);
 
-                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
             }
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "Error deserializando mensaje: {Json}", json);
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error procesando BooksUploadedEvent");
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
+                _logger.LogError(ex, "Error procesando StudentRegisteredEvent para StudentId: {StudentId}", @event?.StudentId);
+                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
             }
         };
 
         await _channel.BasicConsumeAsync(
-            queue: _settings.Events.BooksUploaded.Queue,
+            queue: _settings.Events.StudentRegistered.Queue,
             autoAck: false,
-            consumer: consumer
+            consumer: consumer,
+            cancellationToken: stoppingToken
         );
 
         await Task.Delay(Timeout.Infinite, stoppingToken);

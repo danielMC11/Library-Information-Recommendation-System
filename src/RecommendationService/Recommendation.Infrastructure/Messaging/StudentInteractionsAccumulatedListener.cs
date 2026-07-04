@@ -71,9 +71,9 @@ public class StudentInteractionsAccumulatedListener : BackgroundService
                 }
 
                 using var scope = _scopeFactory.CreateScope();
-                var calculateService = scope.ServiceProvider.GetRequiredService<CalculateUserProfileVectorService>();
+                var calculateService = scope.ServiceProvider.GetRequiredService<StudentProfileVectorService>();
                 
-                await calculateService.CalculateAndSaveProfileVectorAsync(@event);
+                await calculateService.RecalculateProfileVector(@event);
 
                 await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
             }
