@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MiniIdentityApi.Application\MiniIdentityApi.Application.csproj" />
     <ProjectReference Include="..\MiniIdentityApi.Domain\MiniIdentityApi.Domain.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared\Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,9 +5,11 @@ using Microsoft.OpenApi;
 using MiniIdentityApi.Application.Interfaces;
 using MiniIdentityApi.Application.Services;
 using MiniIdentityApi.Domain.Entities;
+using MiniIdentityApi.Infrastructure.Messaging;
 using MiniIdentityApi.Infrastructure.Persistence;
 using MiniIdentityApi.Infrastructure.Repositories;
 using MiniIdentityApi.Infrastructure.Security;
+using Shared.Config;
 using System.Text;
 
 
@@ -65,6 +67,10 @@ builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<UserService>();
+
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName));
+builder.Services.AddSingleton<IStudentRegisteredPublisher, StudentRegisteredPublisher>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing in configuration.");

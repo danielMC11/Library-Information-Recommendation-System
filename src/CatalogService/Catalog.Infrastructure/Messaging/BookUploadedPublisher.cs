@@ -3,22 +3,20 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Shared.Events;
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Catalog.Application.Interfaces;
 
 namespace Catalog.Infrastructure.Messaging;
 
-public class BooksUploadedPublisher : IBooksUploadedPublisher
+public class BookUploadedPublisher : IBookUploadedPublisher
 {
     private readonly RabbitMQSettings _settings;
-    private readonly ILogger<BooksUploadedPublisher> _logger;
+    private readonly ILogger<BookUploadedPublisher> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
 
-    public BooksUploadedPublisher(IOptions<RabbitMQSettings> settings, ILogger<BooksUploadedPublisher> logger)
+    public BookUploadedPublisher(IOptions<RabbitMQSettings> settings, ILogger<BookUploadedPublisher> logger)
     {
         _settings = settings.Value;
         _logger = logger;
@@ -26,7 +24,7 @@ public class BooksUploadedPublisher : IBooksUploadedPublisher
 
     private async Task InitializeRabbitMQAsync()
     {
-        if (_channel != null) return;
+        if (_channel != null && _channel.IsOpen) return;
 
         var factory = new ConnectionFactory
         {
@@ -41,7 +39,7 @@ public class BooksUploadedPublisher : IBooksUploadedPublisher
         _channel = await _connection.CreateChannelAsync();
     }
 
-    public async Task PublishAsync(BooksUploadedEvent @event)
+    public async Task PublishAsync(BookUploadedEvent @event)
     {
         try
         {
@@ -67,12 +65,12 @@ public class BooksUploadedPublisher : IBooksUploadedPublisher
                 basicProperties: properties,
                 body: body);
 
-            _logger.LogInformation("Lote de {Count} libros publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
-                @event.Books.Count, _settings.Exchanges.Catalog, _settings.Events.BooksUploaded.RoutingKey);
+            _logger.LogInformation("Libro {BookId} publicado en RabbitMQ (Exchange: {Exchange}, RoutingKey: {RoutingKey})",
+                @event.Id, _settings.Exchanges.Catalog, _settings.Events.BooksUploaded.RoutingKey);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al publicar NewBookBatchEvent en RabbitMQ");
+            _logger.LogError(ex, "Error al publicar BookUploadedEvent en RabbitMQ");
             throw;
         }
     }

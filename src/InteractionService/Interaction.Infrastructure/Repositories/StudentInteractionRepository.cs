@@ -26,4 +26,14 @@ public class StudentInteractionRepository : IStudentInteractionRepository
             .Where(i => i.StudentId == studentId)
             .ToListAsync();
     }
+
+    public async Task DeleteStudentInteractionsAsync(long studentId)
+    {
+        var interactions = await _context.InteractionEvents
+            .Where(i => i.StudentId == studentId)
+            .ToListAsync();
+
+        _context.InteractionEvents.RemoveRange(interactions);
+        await _context.SaveChangesAsync();
+    }
 }

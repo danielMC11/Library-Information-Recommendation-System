@@ -1,4 +1,4 @@
-using Interaction.Domain.enums;
+using Shared.Enums;
 using System;
 
 namespace Interaction.Domain.Entities;

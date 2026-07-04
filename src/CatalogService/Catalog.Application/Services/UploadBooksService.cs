@@ -2,11 +2,7 @@ using Shared.DTOs;
 using Catalog.Application.Interfaces;
 using Catalog.Domain.Entities;
 using Shared.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Catalog.Application.Services;
@@ -15,10 +11,9 @@ public class UploadBooksService
 {
     private readonly IBookRepository _repository;
     private readonly ILogger<UploadBooksService> _logger;
-    private readonly IBooksUploadedPublisher _publisher;
+    private readonly IBookUploadedPublisher _publisher;
 
-
-    public UploadBooksService(IBookRepository repository, ILogger<UploadBooksService> logger, IBooksUploadedPublisher publisher)
+    public UploadBooksService(IBookRepository repository, ILogger<UploadBooksService> logger, IBookUploadedPublisher publisher)
     {
         _repository = repository;
         _logger = logger;
@@ -68,11 +63,20 @@ public class UploadBooksService
             var isbn = GetField(fields, "020", 'a');
             var title = CleanMarcText(GetAllSubfields(fields, "245", 'a', 'b')) ?? "Sin Título";
 
+            // Idioma: primero 041$a (idioma del texto). Si el registro no trae 041,
+            // se cae al 008 usando indexación desde el final (ver ExtractYearFrom008).
+            var language = GetField(fields, "041", 'a') ?? ExtractYearFrom008(fields, returnLanguage: true);
+
+            // Resumen: 520$a. No todos los registros lo traen (dato opcional en el catálogo origen).
+            var summary = GetField(fields, "520", 'a');
+
             var currentBook = new Book
             {
                 Isbn = string.IsNullOrWhiteSpace(isbn) ? null : isbn,
                 Title = title,
-                Year = ExtractYearFrom008(fields)
+                Year = ExtractYearFrom008(fields),
+                Language = string.IsNullOrWhiteSpace(language) ? null : language,
+                Summary = string.IsNullOrWhiteSpace(summary) ? null : summary
             };
 
             // Autor principal (100)
@@ -121,7 +125,7 @@ public class UploadBooksService
                 if (subfield == null) continue; // no existe el subcampo 'a'
 
                 var topicName = CleanMarcText(subfield.Value.Value); // .Value accede a la tupla, .Value al string
-            
+
                 if (string.IsNullOrWhiteSpace(topicName)) continue;
 
                 if (!topicsDb.TryGetValue(topicName, out var topic))
@@ -147,18 +151,18 @@ public class UploadBooksService
                 List<Book> savedBooks = await _repository.SaveAllAsync(newBooks);
                 _logger.LogInformation("Carga terminada. Guardados: {Saved}, Saltados: {Skipped}", response.TotalSaved, response.TotalSkipped);
 
-                var uploadedEvent = new BooksUploadedEvent
+                foreach (var book in savedBooks)
                 {
-                    Books = savedBooks.Select(b => new BookUploadedItem
+                    var uploadedEvent = new BookUploadedEvent
                     {
-                        Id = b.Id,
-                        Description = b.ToString(),
-                        Isbn = b.Isbn,
-                        Year = b.Year,
-                        Language = b.Language
-                    }).ToList()
-                };
-                await _publisher.PublishAsync(uploadedEvent);
+                        Id = book.Id,
+                        Description = book.ToString(),
+                        Isbn = book.Isbn,
+                        Year = book.Year,
+                        Language = book.Language
+                    };
+                    await _publisher.PublishAsync(uploadedEvent);
+                }
             }
             catch (Exception ex)
             {
@@ -260,10 +264,25 @@ public class UploadBooksService
     private string? ExtractYearFrom008(List<MarcField> fields, bool returnLanguage = false)
     {
         var f008 = GetField(fields, "008");
-        if (f008 == null || f008.Length < 40) return null;
+        if (string.IsNullOrEmpty(f008)) return null;
 
-        // El año está en las posiciones 7-10, el idioma en 35-37
-        return returnLanguage ? f008.Substring(35, 3) : f008.Substring(7, 4).Replace("#", "").Trim();
+        if (returnLanguage)
+        {
+            // El idioma ocupa los 3 bytes justo antes de "Modified Record" + "Cataloging Source"
+            // (los últimos 2 bytes del campo 008). Se indexa desde el final en vez de usar la
+            // posición fija 35 porque algunos registros del catálogo traen el 008 con longitud
+            // irregular (ej: 39 caracteres en vez de los 40 estándar), lo que desalinearía
+            // un Substring(35, 3) fijo.
+            int start = f008.Length - 5;
+            if (start < 0) return null;
+
+            var lang = f008.Substring(start, 3).Replace("#", "").Replace("|", "").Trim();
+            return string.IsNullOrWhiteSpace(lang) ? null : lang;
+        }
+
+        // El año está en las posiciones 7-10
+        if (f008.Length < 11) return null;
+        return f008.Substring(7, 4).Replace("#", "").Trim();
     }
 
     private List<byte[]> SplitBytes(byte[] source, byte separator)

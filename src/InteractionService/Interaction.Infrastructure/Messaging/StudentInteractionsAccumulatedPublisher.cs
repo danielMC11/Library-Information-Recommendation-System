@@ -26,7 +26,7 @@ public class StudentInteractionsAccumulatedPublisher : IStudentInteractionsAccum
 
     private async Task InitializeRabbitMQAsync()
     {
-        if (_channel != null) return;
+        if (_channel != null && _channel.IsOpen) return;
 
         var factory = new ConnectionFactory
         {

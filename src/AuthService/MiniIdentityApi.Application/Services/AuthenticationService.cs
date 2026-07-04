@@ -1,6 +1,7 @@
 ﻿using MiniIdentityApi.Application.DTOs.Auth;
 using MiniIdentityApi.Application.Interfaces;
 using MiniIdentityApi.Domain.Entities;
+using Shared.Events;
 
 namespace MiniIdentityApi.Application.Services;
 
@@ -9,15 +10,18 @@ public class AuthenticationService
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
+    private readonly IStudentRegisteredPublisher _studentRegisteredPublisher;
 
     public AuthenticationService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IStudentRegisteredPublisher studentRegisteredPublisher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _studentRegisteredPublisher = studentRegisteredPublisher;
     }
 
     public void RegisterAdmin(RegisterRequest request)
@@ -46,7 +50,7 @@ public class AuthenticationService
         _userRepository.Save(user);
     }
 
-    public void RegisterStudent(RegisterStudentRequest request)
+    public async Task RegisterStudent(RegisterStudentRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
             throw new ArgumentException("Username is required.");
@@ -84,6 +88,13 @@ public class AuthenticationService
         user.Student = student;
 
         _userRepository.Save(user);
+
+        var @event = new StudentRegisteredEvent
+        {
+            StudentId = student.Id,
+            Description = student.ToString()
+        };
+        await _studentRegisteredPublisher.PublishAsync(@event);
     }
 
     public AuthResponse Login(LoginRequest request)

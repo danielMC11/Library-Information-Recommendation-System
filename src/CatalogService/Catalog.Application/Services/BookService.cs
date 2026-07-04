@@ -32,9 +32,12 @@ public class BookService : IBookService
 
         await _interactionApi.SendStudentInteractionAsync(new StudentInteractionEvent
         {
-            BookIds = new List<Guid> { book.Id },
             StudentId = studentId,
-            InteractionType = InteractionType.VIEW.ToString()
+            Interaction = new StudentInteractionItem
+            {
+                BookIds = new List<Guid> { book.Id },
+                InteractionType = InteractionType.VIEW.ToString()
+            }
         });
 
         return MapToDto(book);
@@ -50,12 +53,18 @@ public class BookService : IBookService
     {
         var books = await _repository.SearchBooksAsync(name);
 
-        await _interactionApi.SendStudentInteractionAsync(new StudentInteractionEvent
+        if (books.Any())
         {
-            BookIds = books.Select(b => b.Id).ToList(),
-            StudentId = studentId,
-            InteractionType = InteractionType.SEARCH.ToString()
-        });
+            await _interactionApi.SendStudentInteractionAsync(new StudentInteractionEvent
+            {
+                StudentId = studentId,
+                Interaction = new StudentInteractionItem
+                {
+                    BookIds = books.Select(b => b.Id).ToList(),
+                    InteractionType = InteractionType.SEARCH.ToString()
+                }
+            });
+        }
 
         return books.Select(MapToDto).ToList();
     }

@@ -82,7 +82,7 @@ builder.Services.Configure<RabbitMQSettings>(
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<UploadBooksService>();
-builder.Services.AddSingleton<IBooksUploadedPublisher, BooksUploadedPublisher>();
+builder.Services.AddSingleton<IBookUploadedPublisher, BookUploadedPublisher>();
 
 builder.Services.AddHostedService<RabbitMQConfig>();
 
@@ -158,34 +158,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
-
-static async Task SeedCatalogDataAsync(AppDbContext dbContext)
-{
-    if (await dbContext.Books.AnyAsync())
-        return;
-
-    var book1 = new Book
-    {
-        Title = "Clean Code",
-        Isbn = "9780132350884",
-        Language = "English",
-        Year = "2008",
-        Summary = "A Handbook of Agile Software Craftsmanship."
-    };
-    book1.Authors.Add(new Author { Name = "Robert C. Martin" });
-    book1.Topics.Add(new Topic { Name = "Software Engineering" });
-
-    var book2 = new Book
-    {
-        Title = "Domain-Driven Design",
-        Isbn = "9780321125217",
-        Language = "English",
-        Year = "2003",
-        Summary = "Tackling Complexity in the Heart of Software."
-    };
-    book2.Authors.Add(new Author { Name = "Eric Evans" });
-    book2.Topics.Add(new Topic { Name = "Domain Modeling" });
-
-    dbContext.Books.AddRange(book1, book2);
-    await dbContext.SaveChangesAsync();
-}

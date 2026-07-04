@@ -76,6 +76,10 @@ builder.Services.Configure<RabbitMQSettings>(
     builder.Configuration.GetSection(RabbitMQSettings.SectionName)
 );
 
+builder.Services.Configure<InteractionAccumulationSettings>(
+    builder.Configuration.GetSection(InteractionAccumulationSettings.SectionName)
+);
+
 builder.Services.AddScoped<IStudentFavoriteRepository, Interaction.Infrastructure.Repositories.StudentFavoriteRepository>();
 builder.Services.AddScoped<StudentFavoriteService>();
 

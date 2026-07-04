@@ -56,6 +56,23 @@ services:
       - "5672:5672"   # AMQP
       - "15672:15672" # Management UI
 
+  rate_limit_postgres:
+    image: postgres:16
+    container_name: rate_limit_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret-postgres
+      POSTGRES_DB: rate_limit_db
+    ports:
+      - "5445:5432"
+    volumes:
+      - pgdata_rate_limit:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rate_limit_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant
@@ -69,4 +86,5 @@ volumes:
   mysql_auth:
   pgdata_catalog:
   pgdata_interaction:
+  pgdata_rate_limit:
   qdrant_data:

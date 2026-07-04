@@ -72,8 +72,11 @@ public class StudentFavoriteService
         await _studentInteractionService.ExecuteAsync(new StudentInteractionEvent
         {
             StudentId = studentId,
-            BookIds = new List<Guid> { bookId },
-            InteractionType = "FAVORITE"
+            Interaction = new StudentInteractionItem
+            {
+                BookIds = new List<Guid> { bookId },
+                InteractionType = "FAVORITE"
+            }
         });
 
         return new StudentFavoriteDto
@@ -99,8 +102,11 @@ public class StudentFavoriteService
         await _studentInteractionService.ExecuteAsync(new StudentInteractionEvent
         {
             StudentId = studentId,
-            BookIds = new List<Guid> { bookId },
-            InteractionType = "UNFAVORITE"
+            Interaction = new StudentInteractionItem
+            {
+                BookIds = new List<Guid> { bookId },
+                InteractionType = "UNFAVORITE"
+            }
         });
     }
 }

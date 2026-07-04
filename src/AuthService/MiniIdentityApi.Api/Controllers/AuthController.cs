@@ -26,9 +26,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("registerStudent")]
-    public IActionResult RegisterStudent([FromBody] RegisterStudentRequest request)
+    public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentRequest request)
     {
-        _authenticationService.RegisterStudent(request);
+        await _authenticationService.RegisterStudent(request);
         return StatusCode(StatusCodes.Status201Created, new { message = "Student registered successfully." });
     }
 

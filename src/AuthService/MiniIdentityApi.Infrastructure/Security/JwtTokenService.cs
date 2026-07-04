@@ -23,17 +23,17 @@ public class JwtTokenService : ITokenService
 
     public string GenerateToken(User user)
     {
-        var student = _db.Students.AsNoTracking().FirstOrDefault(s => s.User.Id == user.Id)
-            ?? throw new InvalidOperationException("Student profile not found for this user.");
-
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
             new(JwtRegisteredClaimNames.Email, user.Email),
-            new(ClaimTypes.Role, user.Role.ToString()),
-            new("student_id", student.Id.ToString())
+            new(ClaimTypes.Role, user.Role.ToString())
         };
+
+        var student = _db.Students.AsNoTracking().FirstOrDefault(s => s.User.Id == user.Id);
+        if (student is not null)
+            claims.Add(new("student_id", student.Id.ToString()));
 
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
