@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Shared.Config;
+using Shared.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ public class RabbitMQConfig : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        try
+        await RetryHelper.RetryOnExceptionAsync(async ct =>
         {
             var factory = new ConnectionFactory
             {
@@ -35,36 +36,36 @@ public class RabbitMQConfig : IHostedService
                 VirtualHost = _settings.VirtualHost
             };
 
-            _connection = await factory.CreateConnectionAsync(cancellationToken);
-            _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+            _connection = await factory.CreateConnectionAsync(ct);
+            _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
 
             await _channel.ExchangeDeclareAsync(
                 exchange: _settings.Exchanges.Catalog,
-                type: ExchangeType.Topic,
+                type: ExchangeType.Direct,
                 durable: true,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("Catalog exchange '{Exchange}' declared successfully", _settings.Exchanges.Catalog);
 
             await _channel.ExchangeDeclareAsync(
                 exchange: _settings.Exchanges.Interaction,
-                type: ExchangeType.Topic,
+                type: ExchangeType.Direct,
                 durable: true,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("Interaction exchange '{Exchange}' declared successfully", _settings.Exchanges.Interaction);
 
             await _channel.ExchangeDeclareAsync(
                 exchange: _settings.Exchanges.Auth,
-                type: ExchangeType.Topic,
+                type: ExchangeType.Direct,
                 durable: true,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("Auth exchange '{Exchange}' declared successfully", _settings.Exchanges.Auth);
 
@@ -75,14 +76,14 @@ public class RabbitMQConfig : IHostedService
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             await _channel.QueueBindAsync(
                 queue: _settings.Events.StudentRegistered.Queue,
                 exchange: _settings.Exchanges.Auth,
                 routingKey: _settings.Events.StudentRegistered.RoutingKey,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("StudentRegistered queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
                 _settings.Events.StudentRegistered.Queue, _settings.Exchanges.Auth, _settings.Events.StudentRegistered.RoutingKey);
@@ -94,14 +95,14 @@ public class RabbitMQConfig : IHostedService
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             await _channel.QueueBindAsync(
                 queue: _settings.Events.BooksUploaded.Queue,
                 exchange: _settings.Exchanges.Catalog,
                 routingKey: _settings.Events.BooksUploaded.RoutingKey,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("BooksUploaded queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
                 _settings.Events.BooksUploaded.Queue, _settings.Exchanges.Catalog, _settings.Events.BooksUploaded.RoutingKey);
@@ -113,22 +114,18 @@ public class RabbitMQConfig : IHostedService
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             await _channel.QueueBindAsync(
                 queue: _settings.Events.StudentInteractionsAccumulated.Queue,
                 exchange: _settings.Exchanges.Interaction,
                 routingKey: _settings.Events.StudentInteractionsAccumulated.RoutingKey,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("StudentInteractionsAccumulated queue '{Queue}' bound to exchange '{Exchange}' with routing key '{RoutingKey}'",
                 _settings.Events.StudentInteractionsAccumulated.Queue, _settings.Exchanges.Interaction, _settings.Events.StudentInteractionsAccumulated.RoutingKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize RabbitMQ exchanges and queues.");
-        }
+        }, _logger, "RabbitMQ exchanges and queues", cancellationToken);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

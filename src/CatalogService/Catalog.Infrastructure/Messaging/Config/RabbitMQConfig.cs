@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Shared.Config;
+using Shared.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ public class RabbitMQConfig : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        try
+        await RetryHelper.RetryOnExceptionAsync(async ct =>
         {
             var factory = new ConnectionFactory
             {
@@ -35,23 +36,19 @@ public class RabbitMQConfig : IHostedService
                 VirtualHost = _settings.VirtualHost
             };
 
-            _connection = await factory.CreateConnectionAsync(cancellationToken);
-            _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+            _connection = await factory.CreateConnectionAsync(ct);
+            _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
 
             await _channel.ExchangeDeclareAsync(
                 exchange: _settings.Exchanges.Catalog,
-                type: ExchangeType.Topic,
+                type: ExchangeType.Direct,
                 durable: true,
                 autoDelete: false,
                 arguments: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: ct);
 
             _logger.LogInformation("Catalog exchange '{Exchange}' declared successfully", _settings.Exchanges.Catalog);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize RabbitMQ catalog exchange.");
-        }
+        }, _logger, "RabbitMQ Catalog exchange", cancellationToken);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
