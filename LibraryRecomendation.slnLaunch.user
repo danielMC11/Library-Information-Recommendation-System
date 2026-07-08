@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "src\\AuthService\\Auth.Api\\Auth.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\CatalogService\\Catalog.Api\\Catalog.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\InteractionService\\Interaction.Api\\Interaction.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\RecommendationService\\Recommendation.Api\\Recommendation.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
