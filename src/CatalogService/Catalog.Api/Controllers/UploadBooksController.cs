@@ -1,5 +1,5 @@
 using Shared.DTOs;
-using Catalog.Application.Services;
+using Catalog.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
@@ -11,9 +11,9 @@ namespace Catalog.Api.Controllers;
 [Authorize]
 public class UploadBooksController : ControllerBase
 {
-    private readonly UploadBooksService _uploadService;
+    private readonly IUploadBooksService _uploadService;
 
-    public UploadBooksController(UploadBooksService uploadService)
+    public UploadBooksController(IUploadBooksService uploadService)
     {
         _uploadService = uploadService;
     }

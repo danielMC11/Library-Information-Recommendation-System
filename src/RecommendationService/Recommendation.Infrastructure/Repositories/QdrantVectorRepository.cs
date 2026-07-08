@@ -154,6 +154,9 @@ public class QdrantVectorRepository : IVectorRepository
 
     public async Task<List<Guid>> GetTopRecommendationBooksIdsAsync(float[] studentVector, int limit = 5)
     {
+        if (!await _qdrantClient.CollectionExistsAsync(CollectionName))
+            return [];
+
         var searchResults = await _qdrantClient.SearchAsync(
             collectionName: CollectionName,
             vector: studentVector,
