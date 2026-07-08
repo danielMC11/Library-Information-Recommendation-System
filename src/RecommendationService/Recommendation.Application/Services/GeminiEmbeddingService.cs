@@ -2,8 +2,11 @@
 using Google.GenAI.Types;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Recommendation.Application.Interfaces;
 
-public class GeminiEmbeddingService
+namespace Recommendation.Application.Services;
+
+public class GeminiEmbeddingService : IGeminiEmbeddingService
 {
     private readonly string _apiKey;
     private readonly ILogger<GeminiEmbeddingService> _logger;

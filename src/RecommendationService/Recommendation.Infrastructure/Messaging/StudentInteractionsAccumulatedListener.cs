@@ -6,7 +6,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Shared.Config;
 using Shared.Events;
-using Recommendation.Application.Services;
+using Recommendation.Application.Interfaces;
 using System;
 using System.Text;
 using System.Text.Json;
@@ -71,7 +71,7 @@ public class StudentInteractionsAccumulatedListener : BackgroundService
                 }
 
                 using var scope = _scopeFactory.CreateScope();
-                var calculateService = scope.ServiceProvider.GetRequiredService<StudentProfileVectorService>();
+                var calculateService = scope.ServiceProvider.GetRequiredService<IStudentProfileVectorService>();
                 
                 await calculateService.RecalculateProfileVector(@event);
 

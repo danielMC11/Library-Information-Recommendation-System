@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace Recommendation.Application.Services;
-public class QdrantService
+public class QdrantService : IQdrantService
 {
 
     private readonly IVectorRepository _qdrantVectorRepository;

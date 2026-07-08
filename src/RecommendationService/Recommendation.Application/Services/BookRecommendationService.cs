@@ -3,12 +3,12 @@ using Recommendation.Application.Interfaces;
 
 namespace Recommendation.Application.Services;
 
-public class BookRecommendationService
+public class BookRecommendationService : IBookRecommendationService
 {
-    private readonly QdrantService _qdrantService;
+    private readonly IQdrantService _qdrantService;
     private readonly ICatalogApiService _catalogApiService;
 
-    public BookRecommendationService(QdrantService qdrantService, ICatalogApiService catalogApiService)
+    public BookRecommendationService(IQdrantService qdrantService, ICatalogApiService catalogApiService)
     {
         _qdrantService = qdrantService;
         _catalogApiService = catalogApiService;

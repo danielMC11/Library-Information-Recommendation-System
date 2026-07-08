@@ -1,16 +1,17 @@
 using Shared.Events;
 using Microsoft.Extensions.Logging;
+using Recommendation.Application.Interfaces;
 using Recommendation.Domain.Entities;
 
 namespace Recommendation.Application.Services;
 
-public class BookVectorService
+public class BookVectorService : IBookVectorService
 {
-    private readonly GeminiEmbeddingService _geminiEmbeddingService;
-    private readonly QdrantService _qdrantService;
+    private readonly IGeminiEmbeddingService _geminiEmbeddingService;
+    private readonly IQdrantService _qdrantService;
     private readonly ILogger<BookVectorService> _logger;
 
-    public BookVectorService(GeminiEmbeddingService geminiEmbeddingService, QdrantService qdrantService, ILogger<BookVectorService> logger)
+    public BookVectorService(IGeminiEmbeddingService geminiEmbeddingService, IQdrantService qdrantService, ILogger<BookVectorService> logger)
     {
         _geminiEmbeddingService = geminiEmbeddingService;
         _qdrantService = qdrantService;

@@ -13,18 +13,18 @@ using System.Threading.Tasks;
 
 namespace Recommendation.Application.Services;
 
-public class StudentProfileVectorService
+public class StudentProfileVectorService : IStudentProfileVectorService
 {
-    private readonly QdrantService _qdrantService;
-    private readonly GeminiEmbeddingService _embeddingService;
+    private readonly IQdrantService _qdrantService;
+    private readonly IGeminiEmbeddingService _embeddingService;
     private readonly ILogger<StudentProfileVectorService> _logger;
 
     private readonly float _alpha;
     private const int VectorSize = 768;
 
     public StudentProfileVectorService(
-        QdrantService qdrantService,
-        GeminiEmbeddingService embeddingService,
+        IQdrantService qdrantService,
+        IGeminiEmbeddingService embeddingService,
         ILogger<StudentProfileVectorService> logger,
         IOptions<StudentVectorSettings> settings)
     {
