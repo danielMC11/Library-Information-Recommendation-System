@@ -1,36 +1,36 @@
-version: "3.9"
-
 services:
   # ============================================
   # DATABASES & MESSAGE QUEUES
   # ============================================
-  authservice_db:
-    image: redis:alpine
-    container_name: auth_redis
-    command: redis-server --requirepass secret-redis
+  authservice-db-prod:
+    image: mysql:8.0
+    container_name: auth_mysql_prod
+    environment:
+      MYSQL_ROOT_PASSWORD: secret-mysql
+      MYSQL_DATABASE: auth_db
     ports:
-      - "6379:6379"
+      - "3309:3306"
     networks:
       - proyectel-network
     volumes:
-      - redis_data:/data
+      - prod_mysql_auth:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret-mysql"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  catalogservice_db:
+  catalogservice-db-prod:
     image: postgres:16
-    container_name: catalog_postgres
+    container_name: catalog_postgres_prod
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret-postgres
       POSTGRES_DB: catalog_db
     ports:
-      - "5435:5432"
+      - "5436:5432"
     volumes:
-      - pgdata_catalog:/var/lib/postgresql/data
+      - prod_pgdata_catalog:/var/lib/postgresql/data
     networks:
       - proyectel-network
     healthcheck:
@@ -39,17 +39,17 @@ services:
       timeout: 5s
       retries: 5
 
-  interactionservice_db:
+  interactionservice-db-prod:
     image: postgres:16
-    container_name: interaction_postgres
+    container_name: interaction_postgres_prod
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret-postgres
       POSTGRES_DB: interaction_db
     ports:
-      - "5440:5432"
+      - "5441:5432"
     volumes:
-      - pgdata_interaction:/var/lib/postgresql/data
+      - prod_pgdata_interaction:/var/lib/postgresql/data
     networks:
       - proyectel-network
     healthcheck:
@@ -58,15 +58,34 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
+  rate-limit-db-prod:
+    image: postgres:16
+    container_name: rate_limit_postgres_prod
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret-postgres
+      POSTGRES_DB: rate_limit_db
+    ports:
+      - "5446:5432"
+    volumes:
+      - prod_pgdata_rate_limit:/var/lib/postgresql/data
+    networks:
+      - proyectel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d rate_limit_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq-prod:
     image: rabbitmq:3-management
-    container_name: rabbitmq
+    container_name: rabbitmq_prod
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
+      - "5673:5672"   # AMQP
+      - "15673:15672" # Management UI
     networks:
       - proyectel-network
     healthcheck:
@@ -74,17 +93,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - prod_rabbitmq_data:/var/lib/rabbitmq
 
-  qdrant:
+  qdrant-prod:
     image: qdrant/qdrant:latest
-    container_name: qdrant
+    container_name: qdrant_prod
     ports:
-      - "6333:6333" # REST API
-      - "6334:6334" # gRPC
+      - "6335:6333" # REST API
+      - "6336:6334" # gRPC
     volumes:
-      - qdrant_data:/qdrant/storage
+      - prod_qdrant_data:/qdrant/storage
     networks:
       - proyectel-network
     healthcheck:
@@ -96,19 +116,25 @@ services:
   # ============================================
   # MICROSERVICES
   # ============================================
-  auth-service:
+  auth-service-prod:
     build:
       context: .
-      dockerfile: src/AuthService/MiniIdentityApi.Api/Dockerfile
-    container_name: auth-service
+      dockerfile: src/AuthService/Auth.Api/Dockerfile
+    container_name: auth-service-prod
     ports:
       - "5132:5132"
     environment:
       - ASPNETCORE_HTTP_PORTS=5132
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__Redis=auth_redis:6379,password=secret-redis
+      - ConnectionStrings__AuthDb=Server=authservice-db-prod;Port=3306;Database=auth_db;User=root;Password=secret-mysql;
+      - RabbitMQ__HostName=rabbitmq-prod
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
     depends_on:
-      authservice_db:
+      authservice-db-prod:
+        condition: service_healthy
+      rabbitmq-prod:
         condition: service_healthy
     networks:
       - proyectel-network
@@ -120,19 +146,26 @@ services:
       retries: 3
       start_period: 40s
 
-  library-service:
+  catalog-service-prod:
     build:
       context: .
       dockerfile: src/CatalogService/Catalog.Api/Dockerfile
-    container_name: library-service
+    container_name: catalog-service-prod
     ports:
       - "5281:5281"
     environment:
       - ASPNETCORE_HTTP_PORTS=5281
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=catalog_postgres;Port=5432;Database=catalog_db;Username=postgres;Password=secret-postgres
+      - ConnectionStrings__DefaultConnection=Host=catalogservice-db-prod;Port=5432;Database=catalog_db;Username=postgres;Password=secret-postgres
+      - InteractionApi__BaseUrl=http://interaction-service-prod:5144
+      - RabbitMQ__HostName=rabbitmq-prod
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
     depends_on:
-      catalogservice_db:
+      catalogservice-db-prod:
+        condition: service_healthy
+      rabbitmq-prod:
         condition: service_healthy
     networks:
       - proyectel-network
@@ -144,27 +177,28 @@ services:
       retries: 3
       start_period: 40s
 
-  interaction-service:
+  interaction-service-prod:
     build:
       context: .
       dockerfile: src/InteractionService/Interaction.Api/Dockerfile
-    container_name: interaction-service
+    container_name: interaction-service-prod
     ports:
       - "5144:5144"
     environment:
       - ASPNETCORE_HTTP_PORTS=5144
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=interaction_postgres;Port=5432;Database=interaction_db;Username=postgres;Password=secret-postgres
-      - RabbitMQ__HostName=rabbitmq
+      - ConnectionStrings__DefaultConnection=Host=interactionservice-db-prod;Port=5432;Database=interaction_db;Username=postgres;Password=secret-postgres
+      - RabbitMQ__HostName=rabbitmq-prod
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
-      - Catalog__BaseUrl=http://library-service:5281
+      - CatalogApi__BaseUrl=http://catalog-service-prod:5281
+      - InteractionAccumulation__BatchSize=${InteractionAccumulation__BatchSize}
     depends_on:
-      interactionservice_db:
+      interactionservice-db-prod:
         condition: service_healthy
-      rabbitmq:
-        condition: service_started
+      rabbitmq-prod:
+        condition: service_healthy
     networks:
       - proyectel-network
     restart: unless-stopped
@@ -175,72 +209,53 @@ services:
       retries: 3
       start_period: 40s
 
-  recommendation-service:
+  recommendation-service-prod:
     build:
       context: .
       dockerfile: src/RecommendationService/Recommendation.Api/Dockerfile
-    container_name: recommendation-service
+    container_name: recommendation-service-prod
     ports:
-      - "5180:5180"
+      - "5221:5221"
     environment:
-      - ASPNETCORE_HTTP_PORTS=5180
+      - ASPNETCORE_HTTP_PORTS=5221
       - ASPNETCORE_ENVIRONMENT=Production
-      - Qdrant__Host=qdrant
-      - Qdrant__Port=6333
-      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__RecommendationDb=Host=rate-limit-db-prod;Port=5432;Database=rate_limit_db;Username=postgres;Password=secret-postgres
+      - Gemini__ApiKey=${GEMINI_API_KEY}
+      - RateLimit__MaxRpm=${RATELIMIT_MAXRPM}
+      - RateLimit__MaxTpm=${RATELIMIT_MAXTPM}
+      - RateLimit__MaxRpd=${RATELIMIT_MAXRPD}
+      - StudentVector__Alpha=${STUDENTVECTOR_ALPHA}
+      - Qdrant__Url=http://qdrant-prod:6334
+      - CatalogService__Url=http://catalog-service-prod:5281
+      - RabbitMQ__HostName=rabbitmq-prod
       - RabbitMQ__Port=5672
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
     depends_on:
-      - qdrant
-      - rabbitmq
+      qdrant-prod:
+        condition: service_started
+      rabbitmq-prod:
+        condition: service_healthy
+      rate-limit-db-prod:
+        condition: service_healthy
     networks:
       - proyectel-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5180/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5221/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # ============================================
-  # FRONTEND
-  # ============================================
-  frontend:
-    build:
-      context: ../proyecotelfrontend/ProyectTelFrontend
-      dockerfile: Dockerfile
-    container_name: proyectel-frontend
-    ports:
-      - "3000:80"
-    environment:
-      - AUTH_HOST=auth-service
-      - AUTH_PORT=5132
-      - LIBRARY_HOST=library-service
-      - LIBRARY_PORT=5281
-      - INTERACTION_HOST=interaction-service
-      - INTERACTION_PORT=5144
-    depends_on:
-      - auth-service
-      - library-service
-      - interaction-service
-    networks:
-      - proyectel-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/index.html"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 volumes:
-  pgdata_catalog:
-  pgdata_interaction:
-  qdrant_data:
-  rabbitmq_data:
-  redis_data:
+  prod_pgdata_catalog:
+  prod_pgdata_interaction:
+  prod_qdrant_data:
+  prod_rabbitmq_data:
+  prod_mysql_auth:
+  prod_pgdata_rate_limit:
 
 networks:
   proyectel-network:
