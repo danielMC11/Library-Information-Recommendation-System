@@ -8,12 +8,14 @@ COPY ["src/CatalogService/Catalog.Api/Catalog.Api.csproj", "src/CatalogService/C
 COPY ["src/CatalogService/Catalog.Application/Catalog.Application.csproj", "src/CatalogService/Catalog.Application/"]
 COPY ["src/CatalogService/Catalog.Domain/Catalog.Domain.csproj", "src/CatalogService/Catalog.Domain/"]
 COPY ["src/CatalogService/Catalog.Infrastructure/Catalog.Infrastructure.csproj", "src/CatalogService/Catalog.Infrastructure/"]
+COPY ["src/Shared/Shared/Shared.csproj", "src/Shared/Shared/"]
 
 # Restaurar dependencias
 RUN dotnet restore "src/CatalogService/Catalog.Api/Catalog.Api.csproj"
 
 # Copiar código fuente
 COPY ["src/CatalogService/", "src/CatalogService/"]
+COPY ["src/Shared/", "src/Shared/"]
 
 # Compilar
 RUN dotnet build "src/CatalogService/Catalog.Api/Catalog.Api.csproj" -c Release -o /app/build

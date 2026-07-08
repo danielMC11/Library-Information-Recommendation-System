@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Catalog.Application.Services;
 
-public class UploadBooksService
+public class UploadBooksService : IUploadBooksService
 {
     private readonly IBookRepository _repository;
     private readonly ILogger<UploadBooksService> _logger;

@@ -2,8 +2,7 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Shared.Config;
-using Recommendation.Api.Messaging;
+using Microsoft.OpenApi;
 using Recommendation.Application.Interfaces;
 using Recommendation.Application.Services;
 using Recommendation.Infrastructure.HttpClients;
@@ -11,33 +10,45 @@ using Recommendation.Infrastructure.Messaging;
 using Recommendation.Infrastructure.Messaging.Config;
 using Recommendation.Infrastructure.Persistence;
 using Recommendation.Infrastructure.Services;
+using Shared.Config;
 using System.Text;
 
+// -------------------- ENVIRONMENT VARIABLES --------------------
 Env.Load(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Configuration.AddEnvironmentVariables();
 
-// Add services to the container.
-
+// -------------------- CONTROLLERS --------------------
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
 
+// -------------------- SWAGGER --------------------
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Recommendation API",
+        Version = "v1"
+    });
 
-builder.Services.Configure<RabbitMQSettings>(
-    builder.Configuration.GetSection(RabbitMQSettings.SectionName)
-);
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid JWT token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
 
-builder.Services.Configure<RateLimitSettings>(
-    builder.Configuration.GetSection(RateLimitSettings.SectionName)
-);
+    options.AddSecurityRequirement(document => new()
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
 
-builder.Services.Configure<StudentVectorSettings>(
-    builder.Configuration.GetSection(StudentVectorSettings.SectionName)
-);
-
+// -------------------- DATABASE --------------------
 builder.Services.AddDbContext<RecommendationDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("RecommendationDb"),
@@ -45,28 +56,38 @@ builder.Services.AddDbContext<RecommendationDbContext>(options =>
     )
 );
 
+// -------------------- CONFIGURATION --------------------
+builder.Services.Configure<RabbitMQSettings>(
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName));
+
+builder.Services.Configure<RateLimitSettings>(
+    builder.Configuration.GetSection(RateLimitSettings.SectionName));
+
+builder.Services.Configure<StudentVectorSettings>(
+    builder.Configuration.GetSection(StudentVectorSettings.SectionName));
+
+// -------------------- DEPENDENCIES --------------------
 builder.Services.AddScoped<IVectorRepository, Recommendation.Infrastructure.Repositories.QdrantVectorRepository>();
+builder.Services.AddScoped<IGeminiEmbeddingService, GeminiEmbeddingService>();
+builder.Services.AddScoped<IQdrantService, QdrantService>();
+builder.Services.AddScoped<IBookVectorService, BookVectorService>();
+builder.Services.AddScoped<IStudentProfileVectorService, StudentProfileVectorService>();
+builder.Services.AddScoped<IBookRecommendationService, BookRecommendationService>();
+builder.Services.AddScoped<IRateLimitTracker, RateLimitTracker>();
 
-builder.Services.AddScoped<GeminiEmbeddingService>();
-builder.Services.AddScoped<QdrantService>();
-builder.Services.AddScoped<BookVectorService>();
-builder.Services.AddScoped<StudentProfileVectorService>();
-builder.Services.AddScoped<BookRecommendationService>();
-builder.Services.AddScoped<RateLimitTracker>();
-
+// -------------------- HTTP CLIENTS --------------------
 builder.Services.AddHttpClient<ICatalogApiService, CatalogApiService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["CatalogService:Url"]);
 });
 
-// RabbitMQConfig primero: crea el exchange/queue/binding al arrancar
+// -------------------- MESSAGING --------------------
 builder.Services.AddHostedService<RabbitMQConfig>();
-// Listener: se registra después para que el binding ya exista
 builder.Services.AddHostedService<BookUploadedListener>();
 builder.Services.AddHostedService<StudentRegisteredListener>();
 builder.Services.AddHostedService<StudentInteractionsAccumulatedListener>();
 
-// JWT Authentication
+// -------------------- AUTHENTICATION --------------------
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing");
 
@@ -93,26 +114,25 @@ builder.Services
         };
     });
 
+// -------------------- AUTHORIZATION --------------------
 builder.Services.AddAuthorization();
 
+// -------------------- BUILD --------------------
 var app = builder.Build();
 
-// Apply EF Core migrations for rate_limit_db
+// -------------------- DATABASE MIGRATION --------------------
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
     await dbContext.Database.MigrateAsync();
 }
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
+// -------------------- PIPELINE --------------------
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
+// -------------------- RUN --------------------
 app.Run();

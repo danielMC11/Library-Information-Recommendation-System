@@ -1,17 +1,18 @@
 using Shared.DTOs;
 using Shared.Events;
+using Shared.Helpers;
 using Interaction.Application.Interfaces;
 using Interaction.Domain.Entities;
 
 namespace Interaction.Application.Services;
 
-public class StudentFavoriteService
+public class StudentFavoriteService : IStudentFavoriteService
 {
     private readonly IStudentFavoriteRepository _repository;
-    private readonly StudentInteractionService _studentInteractionService;
+    private readonly IStudentInteractionService _studentInteractionService;
     private readonly ICatalogApiService _catalogApiService;
 
-    public StudentFavoriteService(IStudentFavoriteRepository repository, StudentInteractionService studentInteractionService, ICatalogApiService catalogApiService)
+    public StudentFavoriteService(IStudentFavoriteRepository repository, IStudentInteractionService studentInteractionService, ICatalogApiService catalogApiService)
     {
         _repository = repository;
         _studentInteractionService = studentInteractionService;
@@ -64,7 +65,7 @@ public class StudentFavoriteService
         {
             StudentId = studentId,
             BookId = bookId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = ColombiaTimeHelper.Now
         };
 
         await _repository.SaveStudentFavoriteBookAsync(studentFavorite);

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
-using Recommendation.Application.Services;
+using Recommendation.Application.Interfaces;
 
 namespace Recommendation.Api.Controllers;
 
@@ -10,9 +10,9 @@ namespace Recommendation.Api.Controllers;
 [Route("api/[controller]")]
 public class RecommendationsController : ControllerBase
 {
-    private readonly BookRecommendationService _recommendationService;
+    private readonly IBookRecommendationService _recommendationService;
 
-    public RecommendationsController(BookRecommendationService recommendationService)
+    public RecommendationsController(IBookRecommendationService recommendationService)
     {
         _recommendationService = recommendationService;
     }

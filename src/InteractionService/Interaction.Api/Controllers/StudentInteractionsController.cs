@@ -1,5 +1,5 @@
 using Shared.Events;
-using Interaction.Application.Services;
+using Interaction.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Interaction.Api.Controllers;
@@ -8,9 +8,9 @@ namespace Interaction.Api.Controllers;
 [Route("api/[controller]")]
 public class StudentInteractionsController : ControllerBase
 {
-    private readonly StudentInteractionService _studentInteractionService;
+    private readonly IStudentInteractionService _studentInteractionService;
 
-    public StudentInteractionsController(StudentInteractionService studentInteractionService)
+    public StudentInteractionsController(IStudentInteractionService studentInteractionService)
     {
         _studentInteractionService = studentInteractionService;
     }

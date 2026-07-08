@@ -1,5 +1,5 @@
 using Shared.DTOs;
-using Interaction.Application.Services;
+using Interaction.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,9 +10,9 @@ namespace Interaction.Api.Controllers;
 [Route("api/[controller]")]
 public class StudentFavoriteController : ControllerBase
 {
-    private readonly StudentFavoriteService _favoriteService;
+    private readonly IStudentFavoriteService _favoriteService;
 
-    public StudentFavoriteController(StudentFavoriteService favoriteService)
+    public StudentFavoriteController(IStudentFavoriteService favoriteService)
     {
         _favoriteService = favoriteService;
     }

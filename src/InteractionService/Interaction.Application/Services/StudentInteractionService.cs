@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Shared.Config;
 using Shared.Events;
 using Shared.Enums;
+using Shared.Helpers;
 using Interaction.Application.Interfaces;
 using Interaction.Domain.Entities;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Interaction.Application.Services;
 
-public class StudentInteractionService
+public class StudentInteractionService : IStudentInteractionService
 {
     private readonly IStudentInteractionRepository _repository;
     private readonly IStudentInteractionsAccumulatedPublisher _publisher;
@@ -45,7 +46,7 @@ public class StudentInteractionService
             StudentId = studentInteractionEvent.StudentId,
             BookId = bookId,
             Type = interactionType,
-            Timestamp = DateTime.UtcNow
+            Timestamp = ColombiaTimeHelper.Now
         }).ToList();
 
         await _repository.SaveStudentInteractionAsync(interactionEvents);

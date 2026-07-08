@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Recommendation.Application.Interfaces;
 
 namespace Recommendation.Api.Controllers;
 
@@ -11,10 +12,9 @@ public class TextoRequest
 [Route("api/[controller]")]
 public class TestEmbeddingsController : ControllerBase
 {
-    private readonly GeminiEmbeddingService _embeddingService;
+    private readonly IGeminiEmbeddingService _embeddingService;
 
-    // Inyectamos tu servicio a través del constructor
-    public TestEmbeddingsController(GeminiEmbeddingService embeddingService)
+    public TestEmbeddingsController(IGeminiEmbeddingService embeddingService)
     {
         _embeddingService = embeddingService;
     }

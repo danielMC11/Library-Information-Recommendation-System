@@ -1,7 +1,8 @@
+using DotNetEnv;
 using Interaction.Application.Interfaces;
-using Interaction.Infrastructure.Messaging;
 using Interaction.Application.Services;
 using Interaction.Infrastructure.HttpClients;
+using Interaction.Infrastructure.Messaging;
 using Interaction.Infrastructure.Messaging.Config;
 using Interaction.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,25 +12,24 @@ using Microsoft.OpenApi;
 using Shared.Config;
 using System.Text;
 
-
+// -------------------- ENVIRONMENT VARIABLES --------------------
+Env.Load(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-//CORS
-
+// -------------------- CORS --------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost5173", policy =>
     {
         policy.WithOrigins("http://localhost:5173")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
-// --------------------CONTROLLERS--------------------
+// -------------------- CONTROLLERS --------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -56,12 +56,9 @@ builder.Services.AddSwaggerGen(options =>
     {
         [new OpenApiSecuritySchemeReference("Bearer", document)] = []
     });
-
-
 });
 
-
-// -------------------- DATABASE   
+// -------------------- DATABASE --------------------
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -69,47 +66,32 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-
-// -------------------- DEPENDENCIES --------------------
-
+// -------------------- CONFIGURATION --------------------
 builder.Services.Configure<RabbitMQSettings>(
-    builder.Configuration.GetSection(RabbitMQSettings.SectionName)
-);
+    builder.Configuration.GetSection(RabbitMQSettings.SectionName));
 
 builder.Services.Configure<InteractionAccumulationSettings>(
-    builder.Configuration.GetSection(InteractionAccumulationSettings.SectionName)
-);
+    builder.Configuration.GetSection(InteractionAccumulationSettings.SectionName));
 
+// -------------------- DEPENDENCIES --------------------
 builder.Services.AddScoped<IStudentFavoriteRepository, Interaction.Infrastructure.Repositories.StudentFavoriteRepository>();
-builder.Services.AddScoped<StudentFavoriteService>();
+builder.Services.AddScoped<IStudentFavoriteService, StudentFavoriteService>();
+builder.Services.AddScoped<IStudentInteractionRepository, Interaction.Infrastructure.Repositories.StudentInteractionRepository>();
+builder.Services.AddScoped<IStudentInteractionService, StudentInteractionService>();
+builder.Services.AddSingleton<IStudentInteractionsAccumulatedPublisher, StudentInteractionsAccumulatedPublisher>();
 
-
+// -------------------- HTTP CLIENTS --------------------
 builder.Services.AddHttpClient<ICatalogApiService, CatalogApiService>(client =>
 {
-    // Configuramos la URL base (leyendo del appsettings.json o usando localhost por defecto)
     client.BaseAddress = new Uri(builder.Configuration["CatalogApi:BaseUrl"] ?? "http://localhost:5281");
-
-    // Configuramos headers y timeouts
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-
-
-
-builder.Services.AddScoped<IStudentInteractionRepository, Interaction.Infrastructure.Repositories.StudentInteractionRepository>();
-builder.Services.AddScoped<StudentInteractionService>();
-
-builder.Services.AddSingleton<IStudentInteractionsAccumulatedPublisher, StudentInteractionsAccumulatedPublisher>();
-
+// -------------------- MESSAGING --------------------
 builder.Services.AddHostedService<RabbitMQConfig>();
 
-
-
-
-
-
-// -------------------- JWT CONFIG --------------------
+// -------------------- AUTHENTICATION --------------------
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key is missing");
 
@@ -129,18 +111,17 @@ builder.Services
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
-
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
+// -------------------- AUTHORIZATION --------------------
 builder.Services.AddAuthorization();
 
-
+// -------------------- BUILD --------------------
 var app = builder.Build();
 
 // -------------------- DATABASE MIGRATION --------------------
@@ -150,20 +131,13 @@ using (var scope = app.Services.CreateScope())
     await dbContext.Database.MigrateAsync();
 }
 
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// -------------------- PIPELINE --------------------
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseCors("AllowLocalhost5173");
-app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
+// -------------------- RUN --------------------
 app.Run();

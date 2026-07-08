@@ -8,12 +8,14 @@ COPY ["src/InteractionService/Interaction.Api/Interaction.Api.csproj", "src/Inte
 COPY ["src/InteractionService/Interaction.Application/Interaction.Application.csproj", "src/InteractionService/Interaction.Application/"]
 COPY ["src/InteractionService/Interaction.Domain/Interaction.Domain.csproj", "src/InteractionService/Interaction.Domain/"]
 COPY ["src/InteractionService/Interaction.Infrastructure/Interaction.Infrastructure.csproj", "src/InteractionService/Interaction.Infrastructure/"]
+COPY ["src/Shared/Shared/Shared.csproj", "src/Shared/Shared/"]
 
 # Restaurar dependencias
 RUN dotnet restore "src/InteractionService/Interaction.Api/Interaction.Api.csproj"
 
 # Copiar código fuente
 COPY ["src/InteractionService/", "src/InteractionService/"]
+COPY ["src/Shared/", "src/Shared/"]
 
 # Compilar
 RUN dotnet build "src/InteractionService/Interaction.Api/Interaction.Api.csproj" -c Release -o /app/build

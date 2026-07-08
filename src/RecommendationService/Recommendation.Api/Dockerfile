@@ -8,12 +8,14 @@ COPY ["src/RecommendationService/Recommendation.Api/Recommendation.Api.csproj", 
 COPY ["src/RecommendationService/Recommendation.Application/Recommendation.Application.csproj", "src/RecommendationService/Recommendation.Application/"]
 COPY ["src/RecommendationService/Recommendation.Domain/Recommendation.Domain.csproj", "src/RecommendationService/Recommendation.Domain/"]
 COPY ["src/RecommendationService/Recommendation.Infrastructure/Recommendation.Infrastructure.csproj", "src/RecommendationService/Recommendation.Infrastructure/"]
+COPY ["src/Shared/Shared/Shared.csproj", "src/Shared/Shared/"]
 
 # Restaurar dependencias
 RUN dotnet restore "src/RecommendationService/Recommendation.Api/Recommendation.Api.csproj"
 
 # Copiar código fuente
 COPY ["src/RecommendationService/", "src/RecommendationService/"]
+COPY ["src/Shared/", "src/Shared/"]
 
 # Compilar
 RUN dotnet build "src/RecommendationService/Recommendation.Api/Recommendation.Api.csproj" -c Release -o /app/build

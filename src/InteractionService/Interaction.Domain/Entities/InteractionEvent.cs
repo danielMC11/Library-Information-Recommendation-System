@@ -1,4 +1,5 @@
 using Shared.Enums;
+using Shared.Helpers;
 using System;
 
 namespace Interaction.Domain.Entities;
@@ -9,5 +10,5 @@ public class InteractionEvent
     public long StudentId { get; set; }
     public Guid BookId { get; set; }
     public InteractionType Type { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = ColombiaTimeHelper.Now;
 }
