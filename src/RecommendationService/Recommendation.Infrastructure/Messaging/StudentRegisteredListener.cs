@@ -1,108 +1,27 @@
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using Shared.Config;
 using Shared.Events;
-using Recommendation.Application.Services;
-using System.Text;
-using System.Text.Json;
+using Recommendation.Application.Interfaces;
 
 namespace Recommendation.Infrastructure.Messaging;
 
-public class StudentRegisteredListener : BackgroundService
+public class StudentRegisteredListener : RateLimitedRabbitListenerBase<StudentRegisteredEvent>
 {
-    private readonly RabbitMQSettings _settings;
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<StudentRegisteredListener> _logger;
-    private IConnection? _connection;
-    private IChannel? _channel;
-
     public StudentRegisteredListener(
         IOptions<RabbitMQSettings> settings,
         ILogger<StudentRegisteredListener> logger,
         IServiceScopeFactory scopeFactory)
+        : base(settings, logger, scopeFactory) { }
+
+    protected override string QueueName => _settings.Events.StudentRegistered.Queue;
+    protected override string ResumeConfigKey => "GeminiResumeAtUtc";
+    protected override int EstimateTokens(StudentRegisteredEvent @event) => @event.Description?.Length / 4 ?? 0;
+
+    protected override async Task ProcessMessageAsync(StudentRegisteredEvent @event, IServiceScope scope)
     {
-        _settings = settings.Value;
-        _logger = logger;
-        _scopeFactory = scopeFactory;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        var factory = new ConnectionFactory
-        {
-            HostName = _settings.HostName,
-            Port = _settings.Port,
-            UserName = _settings.UserName,
-            Password = _settings.Password,
-            VirtualHost = _settings.VirtualHost
-        };
-
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
-
-        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
-
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-
-        consumer.ReceivedAsync += async (_, ea) =>
-        {
-            var body = ea.Body.ToArray();
-            var json = Encoding.UTF8.GetString(body);
-
-            StudentRegisteredEvent? @event = null;
-
-            try
-            {
-                @event = JsonSerializer.Deserialize<StudentRegisteredEvent>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (@event == null)
-                {
-                    _logger.LogWarning("Deserialized event is null. Body: {Json}", json);
-                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
-                    return;
-                }
-
-                _logger.LogInformation("Recibido StudentRegisteredEvent para StudentId: {StudentId}", @event.StudentId);
-
-                using var scope = _scopeFactory.CreateScope();
-                var profileService = scope.ServiceProvider.GetRequiredService<StudentProfileVectorService>();
-                await profileService.CalculateInitialProfileVector(@event);
-
-                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "Error deserializando mensaje: {Json}", json);
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error procesando StudentRegisteredEvent para StudentId: {StudentId}", @event?.StudentId);
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
-            }
-        };
-
-        await _channel.BasicConsumeAsync(
-            queue: _settings.Events.StudentRegistered.Queue,
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: stoppingToken
-        );
-
-        await Task.Delay(Timeout.Infinite, stoppingToken);
-    }
-
-    public override void Dispose()
-    {
-        _channel?.Dispose();
-        _connection?.Dispose();
-        base.Dispose();
+        var profileService = scope.ServiceProvider.GetRequiredService<IStudentProfileVectorService>();
+        await profileService.CalculateInitialProfileVector(@event);
     }
 }
