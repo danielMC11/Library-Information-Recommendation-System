@@ -12,7 +12,7 @@ using Recommendation.Infrastructure.Persistence;
 namespace Recommendation.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(RecommendationDbContext))]
-    [Migration("20260702191632_InitialCreate")]
+    [Migration("20260706235828_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Recommendation.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -36,7 +36,10 @@ namespace Recommendation.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<DateTime>("Minute")
+                    b.Property<DateTime>("MinuteEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("MinuteStart")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("RequestCount")
@@ -47,7 +50,7 @@ namespace Recommendation.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Minute", "Date")
+                    b.HasIndex("MinuteStart", "Date")
                         .IsUnique();
 
                     b.ToTable("RateLimitStates", (string)null);

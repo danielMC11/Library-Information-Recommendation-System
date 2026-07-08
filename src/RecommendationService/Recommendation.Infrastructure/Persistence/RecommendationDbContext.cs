@@ -22,7 +22,7 @@ public class RecommendationDbContext : DbContext
         modelBuilder.Entity<RateLimitState>(entity =>
         {
             entity.ToTable("RateLimitStates");
-            entity.HasIndex(e => new { e.Minute, e.Date }).IsUnique();
+            entity.HasIndex(e => new { e.MinuteStart, e.Date }).IsUnique();
         });
     }
 }

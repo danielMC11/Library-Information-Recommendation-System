@@ -18,7 +18,8 @@ namespace Recommendation.Infrastructure.Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Minute = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    MinuteStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    MinuteEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Date = table.Column<DateOnly>(type: "date", nullable: false),
                     RequestCount = table.Column<int>(type: "integer", nullable: false),
                     TokenCount = table.Column<int>(type: "integer", nullable: false)
@@ -43,9 +44,9 @@ namespace Recommendation.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RateLimitStates_Minute_Date",
+                name: "IX_RateLimitStates_MinuteStart_Date",
                 table: "RateLimitStates",
-                columns: new[] { "Minute", "Date" },
+                columns: new[] { "MinuteStart", "Date" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
