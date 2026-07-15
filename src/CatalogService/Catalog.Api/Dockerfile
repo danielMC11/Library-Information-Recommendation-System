@@ -26,6 +26,10 @@ RUN dotnet publish "src/CatalogService/Catalog.Api/Catalog.Api.csproj" -c Releas
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copiar archivos publicados del build

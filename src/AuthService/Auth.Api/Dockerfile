@@ -26,6 +26,10 @@ RUN dotnet publish "src/AuthService/Auth.Api/Auth.Api.csproj" -c Release -o /app
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copiar archivos publicados del build

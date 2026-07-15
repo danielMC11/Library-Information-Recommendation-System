@@ -14,9 +14,11 @@ using Shared.Config;
 using System.Text;
 
 // -------------------- ENVIRONMENT VARIABLES --------------------
-Env.Load(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".env"));
+var envFile = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", ".env");
+if (File.Exists(envFile)) Env.Load(envFile);
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
 
 // -------------------- CORS --------------------
 builder.Services.AddCors(options =>
@@ -38,29 +40,36 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // -------------------- SWAGGER --------------------
-builder.Services.AddSwaggerGen(options =>
+if (builder.Environment.IsDevelopment())
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddSwaggerGen(options =>
     {
-        Title = "Auth API",
-        Version = "v1"
-    });
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Auth API",
+            Version = "v1"
+        });
 
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token.",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "bearer"
-    });
+        var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        options.IncludeXmlComments(xmlPath);
 
-    options.AddSecurityRequirement(document => new()
-    {
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token.",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "bearer"
+        });
+
+        options.AddSecurityRequirement(document => new()
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
     });
-});
+}
 
 // -------------------- DATABASE --------------------
 var connectionString = builder.Configuration.GetConnectionString("AuthDb")
@@ -144,11 +153,15 @@ using (var scope = app.Services.CreateScope())
 }
 
 // -------------------- PIPELINE --------------------
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 app.UseCors("AllowLocalhost5173");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok("healthy"));
 app.MapControllers();
 
 // -------------------- RUN --------------------
