@@ -121,8 +121,6 @@ services:
       context: .
       dockerfile: src/AuthService/Auth.Api/Dockerfile
     container_name: auth-service-prod
-    ports:
-      - "5132:5132"
     environment:
       - ASPNETCORE_HTTP_PORTS=5132
       - ASPNETCORE_ENVIRONMENT=Production
@@ -151,8 +149,6 @@ services:
       context: .
       dockerfile: src/CatalogService/Catalog.Api/Dockerfile
     container_name: catalog-service-prod
-    ports:
-      - "5281:5281"
     environment:
       - ASPNETCORE_HTTP_PORTS=5281
       - ASPNETCORE_ENVIRONMENT=Production
@@ -182,8 +178,6 @@ services:
       context: .
       dockerfile: src/InteractionService/Interaction.Api/Dockerfile
     container_name: interaction-service-prod
-    ports:
-      - "5144:5144"
     environment:
       - ASPNETCORE_HTTP_PORTS=5144
       - ASPNETCORE_ENVIRONMENT=Production
@@ -214,17 +208,15 @@ services:
       context: .
       dockerfile: src/RecommendationService/Recommendation.Api/Dockerfile
     container_name: recommendation-service-prod
-    ports:
-      - "5221:5221"
     environment:
       - ASPNETCORE_HTTP_PORTS=5221
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__RecommendationDb=Host=rate-limit-db-prod;Port=5432;Database=rate_limit_db;Username=postgres;Password=secret-postgres
-      - Gemini__ApiKey=${GEMINI_API_KEY}
-      - RateLimit__MaxRpm=${RATELIMIT_MAXRPM}
-      - RateLimit__MaxTpm=${RATELIMIT_MAXTPM}
-      - RateLimit__MaxRpd=${RATELIMIT_MAXRPD}
-      - StudentVector__Alpha=${STUDENTVECTOR_ALPHA}
+      - Gemini__ApiKey=${Gemini__ApiKey}
+      - RateLimit__MaxRpm=${RateLimit__MaxRpm}
+      - RateLimit__MaxTpm=${RateLimit__MaxTpm}
+      - RateLimit__MaxRpd=${RateLimit__MaxRpd}
+      - StudentVector__Alpha=${StudentVector__Alpha}
       - Qdrant__Url=http://qdrant-prod:6334
       - CatalogService__Url=http://catalog-service-prod:5281
       - RabbitMQ__HostName=rabbitmq-prod
@@ -247,6 +239,38 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # ============================================
+  # API GATEWAY
+  # ============================================
+  api-gateway-prod:
+    build:
+      context: .
+      dockerfile: src/ApiGateway/Dockerfile
+    container_name: api-gateway-prod
+    ports:
+      - "5075:5075"
+    environment:
+      - ASPNETCORE_HTTP_PORTS=5075
+      - ASPNETCORE_ENVIRONMENT=Production
+    depends_on:
+      auth-service-prod:
+        condition: service_healthy
+      catalog-service-prod:
+        condition: service_healthy
+      interaction-service-prod:
+        condition: service_healthy
+      recommendation-service-prod:
+        condition: service_healthy
+    networks:
+      - proyectel-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5075/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 
 volumes:
