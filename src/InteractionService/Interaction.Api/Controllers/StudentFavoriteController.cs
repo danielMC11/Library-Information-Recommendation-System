@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 namespace Interaction.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/interaction/[controller]")]
 public class StudentFavoriteController : ControllerBase
 {
     private readonly IStudentFavoriteService _favoriteService;
@@ -25,6 +25,9 @@ public class StudentFavoriteController : ControllerBase
         return long.TryParse(studentIdClaim, out var id) ? id : 0;
     }
 
+    /// <summary>Guarda un libro como favorito para el estudiante autenticado.</summary>
+    /// <param name="bookId">ID del libro (GUID).</param>
+    /// <returns>Datos del favorito guardado.</returns>
     [Authorize]
     [HttpPost("save/{bookId:guid}")]
     public async Task<ActionResult<StudentFavoriteDto>> SaveFavorite([FromRoute] Guid bookId)
@@ -45,6 +48,8 @@ public class StudentFavoriteController : ControllerBase
         }
     }
 
+    /// <summary>Obtiene la lista de libros favoritos del estudiante autenticado.</summary>
+    /// <returns>Lista de libros favoritos.</returns>
     [Authorize]
     [HttpGet("list")]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetFavorites()
@@ -65,6 +70,9 @@ public class StudentFavoriteController : ControllerBase
         }
     }
 
+    /// <summary>Verifica si un libro está marcado como favorito por el estudiante autenticado.</summary>
+    /// <param name="bookId">ID del libro (GUID).</param>
+    /// <returns>True si es favorito, false en caso contrario.</returns>
     [Authorize]
     [HttpGet("check/{bookId:guid}")]
     public async Task<ActionResult<bool>> CheckFavorite([FromRoute] Guid bookId)
@@ -85,6 +93,9 @@ public class StudentFavoriteController : ControllerBase
         }
     }
 
+    /// <summary>Elimina un libro de los favoritos del estudiante autenticado.</summary>
+    /// <param name="bookId">ID del libro (GUID).</param>
+    /// <returns>Código 204 si se eliminó correctamente.</returns>
     [Authorize]
     [HttpDelete("delete/{bookId:guid}")]
     public async Task<IActionResult> DeleteFavorite([FromRoute] Guid bookId)

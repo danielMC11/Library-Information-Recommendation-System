@@ -7,7 +7,7 @@ namespace Recommendation.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]")]
+[Route("api/recommendation/[controller]")]
 public class RecommendationsController : ControllerBase
 {
     private readonly IBookRecommendationService _recommendationService;
@@ -25,6 +25,9 @@ public class RecommendationsController : ControllerBase
         return long.TryParse(studentIdClaim, out var id) ? id : 0;
     }
 
+    /// <summary>Obtiene recomendaciones de libros personalizadas para el estudiante autenticado.</summary>
+    /// <param name="limit">Cantidad máxima de recomendaciones (por defecto 10).</param>
+    /// <returns>Lista de libros recomendados.</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetRecommendations(
         [FromQuery] int limit = 10)

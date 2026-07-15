@@ -15,7 +15,7 @@ public class CatalogApiService : ICatalogApiService
 
     public async Task<IEnumerable<BookDto>> GetBooksByIdsAsync(List<Guid> ids)
     {
-        var response = await _httpClient.PostAsJsonAsync("api/books/details", ids);
+        var response = await _httpClient.PostAsJsonAsync("api/catalog/books/details", ids);
 
         if (!response.IsSuccessStatusCode)
             return Enumerable.Empty<BookDto>();

@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 namespace Catalog.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/catalog/[controller]")]
 public class BooksController : ControllerBase
 {
     private readonly IBookService _bookService;
@@ -25,6 +25,10 @@ public class BooksController : ControllerBase
         return long.TryParse(studentIdClaim, out var id) ? id : 0;
     }
 
+    /// <summary>Obtiene libros paginados. Endpoint público.</summary>
+    /// <param name="page">Número de página (por defecto 1).</param>
+    /// <param name="pageSize">Tamaño de página (por defecto 10).</param>
+    /// <returns>Lista paginada de libros.</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
@@ -32,6 +36,9 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
+    /// <summary>Busca libros por nombre. Requiere autenticación.</summary>
+    /// <param name="name">Término de búsqueda.</param>
+    /// <returns>Lista de libros que coinciden con el término.</returns>
     [Authorize]
     [HttpGet("search")]
     public async Task<ActionResult<IEnumerable<BookDto>>> SearchBooks([FromQuery] string name)
@@ -46,6 +53,9 @@ public class BooksController : ControllerBase
         return Ok(books);
     }
 
+    /// <summary>Obtiene el detalle de un libro por su ID. Requiere autenticación.</summary>
+    /// <param name="id">ID del libro (GUID).</param>
+    /// <returns>Detalle del libro incluyendo información de interacción del estudiante.</returns>
     [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetBookDetailsAsync(Guid id)
@@ -62,6 +72,9 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
+    /// <summary>Obtiene múltiples libros por sus IDs. Endpoint público.</summary>
+    /// <param name="ids">Lista de GUIDs de libros.</param>
+    /// <returns>Lista de libros encontrados.</returns>
     [HttpPost("details")]
     public async Task<ActionResult<IEnumerable<BookDto>>> GetBooksByIds([FromBody] List<Guid> ids)
     {
