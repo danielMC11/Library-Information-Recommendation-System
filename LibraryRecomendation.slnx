@@ -1,5 +1,8 @@
 
 <Solution>
+    <Folder Name="/ApiGateway/">
+        <Project Path="src/ApiGateway/ApiGateway.csproj" Id="1ef38840-5931-4556-bc6d-cec3cd7099e7" />
+    </Folder>
     <Folder Name="/AuthService/">
         <Project Path="src/AuthService/Auth.Api/Auth.Api.csproj" />
         <Project Path="src/AuthService/Auth.Application/Auth.Application.csproj" />
@@ -16,6 +19,7 @@
     </Folder>
     <Folder Name="/Elementos de la solución/">
         <File Path=".env" />
+        <File Path=".env.example" />
         <File Path="docker-compose.prod.yml" />
         <File Path="docker-compose.yml" />
     </Folder>

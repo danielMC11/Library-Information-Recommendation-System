@@ -1,0 +1,588 @@
+{
+  "info": {
+    "_postman_id": "50cb4b0b-146b-43b3-83d7-de7cffb162dc",
+    "name": "Library Recommendation System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33997142"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Career",
+          "item": [
+            {
+              "name": "Get All Careers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authBaseUrl}}/api/auth/Career",
+                  "host": [
+                    "{{authBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "Career"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Career By Id",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authBaseUrl}}/api/auth/Career/{{careerId}}",
+                  "host": [
+                    "{{authBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "Career",
+                    "{{careerId}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Students",
+          "item": [
+            {
+              "name": "Get All Students",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authBaseUrl}}/api/auth/Student",
+                  "host": [
+                    "{{authBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "Student"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student By Id",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{authBaseUrl}}/api/auth/Student/{{userId}}",
+                  "host": [
+                    "{{authBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "Student",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const responseData = pm.response.json();",
+                  "const token = responseData.accessToken;",
+                  "pm.globals.set(\"accessToken\", token);",
+                  "pm.test(\"Token extraído y guardado correctamente\", function () {",
+                  "    pm.expect(token).to.be.a('string');",
+                  "});"
+                ]
+              },
+              "listen": "test"
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usernameOrEmail\": \"admin\",\n  \"password\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{authBaseUrl}}/api/auth/Auth/login",
+              "host": [
+                "{{authBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "Auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin2\",\n  \"email\": \"admin2@example.com\",\n  \"password\": \"Pass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{authBaseUrl}}/api/auth/Auth/registerAdmin",
+              "host": [
+                "{{authBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "Auth",
+                "registerAdmin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newstudent\",\n  \"email\": \"newstudent@example.com\",\n  \"password\": \"Pass123!\",\n  \"careerId\": 1,\n  \"subjectIds\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{authBaseUrl}}/api/auth/Auth/registerStudent",
+              "host": [
+                "{{authBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "Auth",
+                "registerStudent"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog - Books",
+      "item": [
+        {
+          "name": "Get Books (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/api/catalog/Books?page=1&pageSize=10",
+              "host": [
+                "{{catalogBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "Books"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Books",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/api/catalog/Books/search?name=programacion",
+              "host": [
+                "{{catalogBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "Books",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "programacion"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Book Details By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/api/catalog/Books/{{bookId}}",
+              "host": [
+                "{{catalogBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "Books",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Books By Ids",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"00000000-0000-0000-0000-000000000000\"\n]"
+            },
+            "url": {
+              "raw": "{{catalogBaseUrl}}/api/catalog/Books/details",
+              "host": [
+                "{{catalogBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "Books",
+                "details"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog - Upload",
+      "item": [
+        {
+          "name": "Upload ISO File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "description": "Archivo ISO 2709 (.marc o .iso2709)",
+                  "key": "file",
+                  "type": "file",
+                  "value": null
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{catalogBaseUrl}}/api/catalog/UploadBooks/upload",
+              "host": [
+                "{{catalogBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "UploadBooks",
+                "upload"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interaction - Favorites",
+      "item": [
+        {
+          "name": "Save Favorite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{interactionBaseUrl}}/api/interaction/StudentFavorite/save/{{bookId}}",
+              "host": [
+                "{{interactionBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interaction",
+                "StudentFavorite",
+                "save",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Favorites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{interactionBaseUrl}}/api/interaction/StudentFavorite/list",
+              "host": [
+                "{{interactionBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interaction",
+                "StudentFavorite",
+                "list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Favorite",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{interactionBaseUrl}}/api/interaction/StudentFavorite/check/{{bookId}}",
+              "host": [
+                "{{interactionBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interaction",
+                "StudentFavorite",
+                "check",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favorite",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{interactionBaseUrl}}/api/interaction/StudentFavorite/delete/{{bookId}}",
+              "host": [
+                "{{interactionBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interaction",
+                "StudentFavorite",
+                "delete",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Interaction - Interactions",
+      "item": [
+        {
+          "name": "Save Interaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": 1,\n  \"interaction\": {\n    \"bookIds\": [\"00000000-0000-0000-0000-000000000000\"],\n    \"interactionType\": \"VIEW\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{interactionBaseUrl}}/api/interaction/StudentInteractions",
+              "host": [
+                "{{interactionBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "interaction",
+                "StudentInteractions"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Recommendation",
+      "item": [
+        {
+          "name": "Get Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{recommendationBaseUrl}}/api/recommendation/Recommendations?limit=10",
+              "host": [
+                "{{recommendationBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "recommendation",
+                "Recommendations"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "authBaseUrl",
+      "value": "http://localhost:5132"
+    },
+    {
+      "key": "catalogBaseUrl",
+      "value": "http://localhost:5281"
+    },
+    {
+      "key": "interactionBaseUrl",
+      "value": "http://localhost:5144"
+    },
+    {
+      "key": "recommendationBaseUrl",
+      "value": "http://localhost:5221"
+    }
+  ]
+}

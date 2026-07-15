@@ -17,6 +17,10 @@
       {
         "Path": "src\\RecommendationService\\Recommendation.Api\\Recommendation.Api.csproj",
         "Action": "Start"
+      },
+      {
+        "Path": "src\\ApiGateway\\ApiGateway.csproj",
+        "Action": "Start"
       }
     ]
   }
